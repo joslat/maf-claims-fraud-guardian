@@ -4,8 +4,8 @@ Backend MCP (Model Context Protocol) server that exposes core claims and policy 
 
 ## Features
 
-- **HTTP/SSE Transport**: Hosted as an ASP.NET Core web application, accessible over HTTP
-- **MCP Inspector Compatible**: Test via MCP Inspector at `http://localhost:5050/sse`
+- **HTTP Transport**: Hosted as an ASP.NET Core web application, accessible over HTTP
+- **MCP Inspector Compatible**: Test via MCP Inspector at `http://localhost:5050`
 - **Production Ready**: Can be deployed to Azure App Service, Container Apps, or any cloud provider
 
 ## Tools Exposed
@@ -61,29 +61,29 @@ Return only the claims that are considered suspicious or flagged for fraud, plus
 
 ```bash
 cd src/ClaimsCoreMcp/ClaimsCoreMcp
-dotnet run
+dotent run
 ```
 
 The server will start on:
 - HTTP: `http://localhost:5050`
-- MCP Endpoint: `http://localhost:5050/sse`
-- Health Check: `http://localhost:5050/`
+- MCP Endpoint: `http://localhost:5050` (root path)
+- Health Check: `http://localhost:5050/health`
 
 ### Test with MCP Inspector
 
 1. Start the server with `dotnet run`
 2. Open MCP Inspector
-3. Connect to `http://localhost:5050/sse`
+3. Connect to `http://localhost:5050`
 4. Browse and test the available tools
 
 ### Test with curl
 
 ```bash
 # Health check
-curl http://localhost:5050/
+curl http://localhost:5050/health
 
-# MCP SSE endpoint (for MCP clients)
-curl http://localhost:5050/sse
+# MCP endpoint (for MCP clients)
+curl http://localhost:5050/
 ```
 
 ## Sample Data
@@ -108,21 +108,28 @@ az webapp deploy --resource-group <rg> --name <app-name> --src-path ./publish
 
 ### Docker
 
-```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-WORKDIR /app
-EXPOSE 80
+Build and run the MCP server in a container:
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /src
-COPY . .
-RUN dotnet publish -c Release -o /app/publish
+```bash
+# Build the Docker image
+cd C:\MAF\maf-claims-fraud-guardian\src\ClaimsCoreMcp
+docker build -t claims-core-mcp:latest .
 
-FROM base AS final
-WORKDIR /app
-COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "ClaimsCoreMcp.dll"]
+# Run the container
+docker run -d -p 5050:8080 --name claims-core-mcp claims-core-mcp:latest
+
+# Test the MCP server
+curl http://localhost:5050/health
+
+# View logs
+docker logs claims-core-mcp
+
+# Stop and remove
+docker stop claims-core-mcp
+docker rm claims-core-mcp
 ```
+
+The Dockerfile uses a multi-stage build with .NET 10 SDK for building and .NET 10 runtime for deployment.
 
 ### Local with ngrok (for public URL)
 
@@ -141,7 +148,7 @@ Add to your MCP client configuration:
 {
   "mcpServers": {
     "claims-core-mcp": {
-      "url": "http://localhost:5050/sse"
+      "url": "http://localhost:5050"
     }
   }
 }
@@ -151,7 +158,7 @@ Add to your MCP client configuration:
 
 - ASP.NET Core Minimal API
 - ModelContextProtocol.AspNetCore (Official MCP C# SDK)
-- HTTP/SSE Transport for internet accessibility
+- HTTP Transport for internet accessibility
 
 ## License
 

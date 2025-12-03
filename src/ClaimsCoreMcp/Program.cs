@@ -30,11 +30,8 @@ var app = builder.Build();
 
 app.UseCors();
 
-// Map MCP endpoints (exposes /sse for HTTP transport)
-app.MapMcp();
-
-// Health check endpoint
-app.MapGet("/", () => Results.Ok(new
+// Health check endpoint (must be before MapMcp to avoid route conflict)
+app.MapGet("/health", () => Results.Ok(new
 {
     Name = "claims-core-mcp",
     Description = "Backend MCP that exposes core claims and policy data for the Agent Framework: customer profile, contracts, claim history, and suspicious-claim signals.",
@@ -42,9 +39,12 @@ app.MapGet("/", () => Results.Ok(new
     Status = "Running",
     Endpoints = new
     {
-        Mcp = "/sse",
-        Health = "/"
+        Mcp = "/",
+        Health = "/health"
     }
 }));
+
+// Map MCP endpoints (exposes at root path for HTTP transport)
+app.MapMcp();
 
 app.Run();
