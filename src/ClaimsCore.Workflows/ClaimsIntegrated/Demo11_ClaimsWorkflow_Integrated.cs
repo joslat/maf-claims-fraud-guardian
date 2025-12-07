@@ -65,6 +65,9 @@ internal static class Demo11_ClaimsWorkflow_Integrated
     // --------------------- Entry point ---------------------
     public static async Task Execute()
     {
+        // Set console encoding to UTF-8 to support emojis and special characters
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         Console.WriteLine("=== Demo 11 Integrated: Claims Processing Workflow ===\n");
         Console.WriteLine("This demo uses ClaimsCore.Common models and ClaimsCoreMcp tools.\n");
         Console.WriteLine("The workflow is fully self-contained with a UserInputExecutor for conversation.\n");

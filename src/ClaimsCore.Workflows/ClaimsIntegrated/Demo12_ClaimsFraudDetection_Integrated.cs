@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-MAFPlayground-NPU-1.0-CH
+﻿// SPDX-License-Identifier: LicenseRef-MAFPlayground-NPU-1.0-CH
 // Copyright (c) 2025 Jose Luis
 
 using System.ComponentModel;
@@ -68,8 +68,11 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
         => context.QueueStateUpdateAsync(FraudStateShared.Key, state, scopeName: FraudStateShared.Scope);
 
     // --------------------- Entry point ---------------------
-    public static async Task Execute()
+    public static async Task Execute(int scenario = 1)
     {
+        // Set console encoding to UTF-8 to support emojis and special characters
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         Console.WriteLine("=== Demo 12 Integrated: Claims Fraud Detection Workflow ===\n");
         Console.WriteLine("This demo uses ClaimsCore.Common models and ClaimsCoreMcp tools.\n");
         Console.WriteLine("Features: Polymorphic aggregator, data passing via messages, state in aggregator\n");
@@ -84,29 +87,18 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
 
         WorkflowVisualizerTool.PrintAll(workflow, "Demo 12 Integrated: Claims Fraud Detection Workflow");
 
-        // Create mock validated claim from Demo11
-        var mockClaim = new ValidationResult
-        {
-            Ready = true,
-            CustomerId = "CUST-10001",
-            ContractId = "CONTRACT-P-5001",
-            NormalizedClaimType = "Property",
-            NormalizedClaimSubType = "BikeTheft",
-            DateOfLoss = "2025-01-21",
-            DateReported = "2025-01-28",
-            ShortDescription = "Mountain bike stolen from grocery store",
-            ItemDescription = "Trek X-Caliber 8, red mountain bike, 21-speed",
-            DetailedDescription = "My mountain bike was stolen from outside the grocery store. It was locked with a cable lock. The bike was a Trek X-Caliber 8, red color, worth approximately $1,200.",
-            PurchasePrice = 1200.00m
-        };
+        // Get mock claim based on scenario
+        var mockClaim = GetMockClaim(scenario);
 
         Console.WriteLine("\n" + new string('=', 80));
         Console.WriteLine("FRAUD DETECTION ANALYSIS (Integrated Version)");
         Console.WriteLine(new string('=', 80) + "\n");
+        Console.WriteLine($"Scenario: {GetScenarioName(scenario)}");
         Console.WriteLine("Analyzing claim:");
         Console.WriteLine($"  Customer: {mockClaim.CustomerId}");
         Console.WriteLine($"  Type: {mockClaim.NormalizedClaimType} - {mockClaim.NormalizedClaimSubType}");
         Console.WriteLine($"  Amount: ${mockClaim.PurchasePrice:N2}");
+        Console.WriteLine($"  Date of Loss: {mockClaim.DateOfLoss}");
         Console.WriteLine();
 
         await using StreamingRun run = await InProcessExecution.StreamAsync(workflow, mockClaim);
@@ -151,6 +143,77 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
         Console.WriteLine("  ? State operations in aggregator (stores collected findings)");
         Console.WriteLine("  ? AI-powered fraud decision with confidence scores");
         Console.WriteLine("  ? Real data from MockClaimsDataService\n");
+    }
+
+    // --------------------- Scenario data ---------------------
+    private static string GetScenarioName(int scenario) => scenario switch
+    {
+        1 => "HIGH RISK - Rare Hello Kitty collector's bike theft (CHF 15K)",
+        2 => "LOW RISK - Mobile phone theft from gym locker (CHF 850)",
+        3 => "MODERATE RISK - Car theft from residential street (CHF 38K)",
+        _ => "HIGH RISK (default)"
+    };
+
+    private static ValidationResult GetMockClaim(int scenario) => scenario switch
+    {
+        1 => GetHighRiskClaim(),
+        2 => GetLowRiskClaim(),
+        3 => GetModerateRiskClaim(),
+        _ => GetHighRiskClaim() // Default to high risk
+    };
+
+    private static ValidationResult GetHighRiskClaim()
+    {
+        return new ValidationResult
+        {
+            Ready = true,
+            CustomerId = "CUST-10001",
+            ContractId = "CONTRACT-P-5001",
+            NormalizedClaimType = "Property",
+            NormalizedClaimSubType = "BikeTheft",
+            DateOfLoss = DateTime.Now.AddDays(-2).ToString("yyyy-MM-dd"), // Day before yesterday
+            DateReported = DateTime.Now.ToString("yyyy-MM-dd"),
+            ShortDescription = "Rare Hello Kitty collector's mountain bike stolen from restaurant",
+            ItemDescription = "Hello Kitty Mountain Bike Collector's Edition, pink and white with Hello Kitty motifs, chromated parts, double suspension",
+            DetailedDescription = "The day before yesterday, I went to a restaurant in downtown Zürich. When I came out after dinner, my bike was gone. It was locked with a heavy-duty U-lock to a bike rack right in front of the restaurant. The bike is a very rare Hello Kitty Mountain Bike Collector's Edition - very pink and white with Hello Kitty motifs all over the frame, chromated parts on the handlebars and wheels, and full double suspension. I purchased it from a specialized collector in Japan for CHF 15,000. It's extremely distinctive and easily recognizable.",
+            PurchasePrice = 15000.00m
+        };
+    }
+
+    private static ValidationResult GetLowRiskClaim()
+    {
+        return new ValidationResult
+        {
+            Ready = true,
+            CustomerId = "CUST-67890",
+            ContractId = "POL-54321",
+            NormalizedClaimType = "Property",
+            NormalizedClaimSubType = "MobileTheft",
+            DateOfLoss = DateTime.Now.AddDays(-45).ToString("yyyy-MM-dd"), // Not recent (45 days ago)
+            DateReported = DateTime.Now.ToString("yyyy-MM-dd"),
+            ShortDescription = "Mobile phone stolen from gym locker",
+            ItemDescription = "Samsung Galaxy S23, black, 256GB",
+            DetailedDescription = "About six weeks ago, I was at my regular gym. I left my mobile phone in my locker with a combination lock. When I returned after my workout, the locker was still locked but my phone was missing. I reported it to the gym staff immediately and filed a police report the same day. The phone was a Samsung Galaxy S23, black color, 256GB storage, which I purchased about 8 months ago for CHF 850.",
+            PurchasePrice = 850.00m
+        };
+    }
+
+    private static ValidationResult GetModerateRiskClaim()
+    {
+        return new ValidationResult
+        {
+            Ready = true,
+            CustomerId = "CUST-10003",
+            ContractId = "CONTRACT-P-5003",
+            NormalizedClaimType = "Property",
+            NormalizedClaimSubType = "CarTheft",
+            DateOfLoss = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"), // Very recent (yesterday)
+            DateReported = DateTime.Now.ToString("yyyy-MM-dd"),
+            ShortDescription = "Car stolen from residential street",
+            ItemDescription = "2022 Volkswagen Golf GTI, dark grey metallic, license plate ZH-123456",
+            DetailedDescription = "Yesterday evening, I parked my car on the street near my apartment in Zürich. This morning when I went to drive to work, the car was gone. I had locked it and engaged the alarm system. The car is a 2022 Volkswagen Golf GTI in dark grey metallic color, license plate ZH-123456. I purchased it new about 18 months ago for CHF 38,000. I immediately filed a police report and checked with the city about any towing - the car was not towed. It appears to have been stolen.",
+            PurchasePrice = 38000.00m
+        };
     }
 
     private static Workflow BuildFraudDetectionWorkflow(IChatClient chatClient)
@@ -480,7 +543,22 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
             var response = await _agent.RunAsync(prompt, cancellationToken: cancellationToken);
             var finding = response.Deserialize<OSINTFinding>(JsonSerializerOptions.Web);
 
-            Console.WriteLine($"? OSINT Check Complete - Fraud Score: {finding.FraudIndicatorScore}/100\n");
+            Console.ForegroundColor = finding.FraudIndicatorScore > 70 ? ConsoleColor.Red : 
+                                      finding.FraudIndicatorScore > 40 ? ConsoleColor.Yellow : ConsoleColor.Green;
+            Console.WriteLine($"✓ OSINT Check Complete - Fraud Score: {finding.FraudIndicatorScore}/100");
+            Console.ResetColor();
+            Console.WriteLine($"  Item Found Online: {(finding.ItemFoundOnline ? "YES" : "NO")}");
+            Console.WriteLine($"  Marketplaces Checked: {finding.MarketplacesChecked.Count}");
+            if (finding.MatchingListings.Count > 0)
+            {
+                Console.WriteLine($"  Matching Listings: {finding.MatchingListings.Count}");
+                foreach (var listing in finding.MatchingListings.Take(2))
+                {
+                    Console.WriteLine($"    • {listing}");
+                }
+            }
+            Console.WriteLine($"  Summary: {finding.Summary}");
+            Console.WriteLine();
             
             return finding;
         }
@@ -512,7 +590,22 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
             var response = await _agent.RunAsync(prompt, cancellationToken: cancellationToken);
             var finding = response.Deserialize<UserHistoryFinding>(JsonSerializerOptions.Web);
 
-            Console.WriteLine($"? User History Check Complete - Customer Fraud Score: {finding.CustomerFraudScore}/100\n");
+            Console.ForegroundColor = finding.CustomerFraudScore > 60 ? ConsoleColor.Red : 
+                                      finding.CustomerFraudScore > 30 ? ConsoleColor.Yellow : ConsoleColor.Green;
+            Console.WriteLine($"✓ User History Check Complete - Customer Fraud Score: {finding.CustomerFraudScore}/100");
+            Console.ResetColor();
+            Console.WriteLine($"  Previous Claims: {finding.PreviousClaimsCount}");
+            Console.WriteLine($"  Suspicious Activity: {(finding.SuspiciousActivityDetected ? "DETECTED" : "None")}");
+            if (finding.ClaimHistory.Count > 0)
+            {
+                Console.WriteLine($"  Recent Claims History:");
+                foreach (var claimItem in finding.ClaimHistory.Take(3))
+                {
+                    Console.WriteLine($"    • {claimItem}");
+                }
+            }
+            Console.WriteLine($"  Summary: {finding.Summary}");
+            Console.WriteLine();
             
             return finding;
         }
@@ -545,7 +638,25 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
             var response = await _agent.RunAsync(prompt, cancellationToken: cancellationToken);
             var finding = response.Deserialize<TransactionFraudFinding>(JsonSerializerOptions.Web);
 
-            Console.WriteLine($"? Transaction Analysis Complete - Fraud Score: {finding.TransactionFraudScore}/100\n");
+            Console.ForegroundColor = finding.TransactionFraudScore > 60 ? ConsoleColor.Red : 
+                                      finding.TransactionFraudScore > 30 ? ConsoleColor.Yellow : ConsoleColor.Green;
+            Console.WriteLine($"✓ Transaction Analysis Complete - Fraud Score: {finding.TransactionFraudScore}/100");
+            Console.ResetColor();
+            Console.WriteLine($"  Anomaly Score: {finding.AnomalyScore}/100");
+            if (finding.RedFlags.Count > 0)
+            {
+                Console.WriteLine($"  Red Flags Detected: {finding.RedFlags.Count}");
+                foreach (var flag in finding.RedFlags)
+                {
+                    Console.WriteLine($"    ⚠️  {flag}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"  Red Flags: None detected");
+            }
+            Console.WriteLine($"  Summary: {finding.Summary}");
+            Console.WriteLine();
             
             return finding;
         }
