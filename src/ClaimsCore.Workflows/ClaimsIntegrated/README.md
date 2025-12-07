@@ -1,22 +1,57 @@
-# Claims Integrated - Demo11 with ClaimsCore.Common Models and ClaimsCoreMcp Tools
+# Claims Integrated - Demos with ClaimsCore.Common Models and ClaimsCoreMcp Tools
 
-This folder contains an integrated version of Demo11 that uses:
-- **ClaimsCore.Common** data models (CustomerInfo, ClaimDraft, ValidationResult, etc.)
-- **ClaimsCoreMcp.Tools.ClaimsTools** for data access (GetCustomerProfile, GetContract, GetCurrentDate)
+This folder contains integrated versions of the Claims demos that use:
+- **ClaimsCore.Common** data models (CustomerInfo, ClaimDraft, ValidationResult, FraudAnalysisState, etc.)
+- **ClaimsCoreMcp.Tools.ClaimsTools** for data access (GetCustomerProfile, GetContract, CheckOnlineMarketplaces, etc.)
 
 ## Overview
 
-`Demo11_ClaimsWorkflow_Integrated.cs` is a variant of the original Demo11 that demonstrates how to integrate with the ClaimsCoreMcp server architecture while maintaining the same workflow structure.
+This folder contains two integrated demos:
 
-### Key Differences from Original Demo11
+1. **Demo11_ClaimsWorkflow_Integrated.cs** - Claims intake workflow
+2. **Demo12_ClaimsFraudDetection_Integrated.cs** - Fraud detection workflow
 
-| Aspect | Original Demo11 | Demo11 Integrated |
-|--------|----------------|-------------------|
+Both maintain the same workflow structure as their originals while integrating with ClaimsCoreMcp server architecture.
+
+### Key Differences from Original Demos
+
+| Aspect | Original Demos | Integrated Demos |
+|--------|----------------|------------------|
 | **Namespace** | `ClaimsCore.Workflows.ClaimsDemo` | `ClaimsCore.Workflows.ClaimsIntegrated` |
 | **Data Models** | `SharedClaimsData.cs` (local) | `ClaimsCore.Common.Models` (shared) |
 | **Tools** | `ClaimsMockTools` (local) | `ClaimsCoreMcp.Tools.ClaimsTools` (shared) |
 | **Data Source** | Hardcoded mock data | `MockClaimsDataService` (via ClaimsTools) |
-| **Conversation History** | Tracked in state | Not tracked (simplified state) |
+| **Conversation History** | Tracked in state (Demo11 only) | Not tracked (simplified state) |
+
+## Demos
+
+### Demo11: Claims Intake Workflow (Integrated)
+
+Conversational claims intake workflow that:
+- Prompts users for claim information interactively
+- Validates customer identity and contract coverage
+- Uses natural language processing for data extraction
+- Provides structured feedback loops
+
+**Key Models Used**:
+- `IntakeDecision` - Intake agent decision output
+- `ValidationResult` - Validation agent output
+- `ClaimWorkflowState` - Workflow state tracking
+
+### Demo12: Fraud Detection Workflow (Integrated)
+
+Multi-agent fraud detection pipeline that:
+- Performs data quality review
+- Analyzes claims through 3 parallel fraud detection agents (OSINT, User History, Transaction)
+- Uses fan-out/fan-in pattern for parallel processing
+- Generates professional fraud analysis reports
+
+**Key Models Used**:
+- `FraudAnalysisState` - Fraud workflow state
+- `OSINTFinding` - Online marketplace validation
+- `UserHistoryFinding` - Customer claim history analysis
+- `TransactionFraudFinding` - Transaction-level fraud scoring
+- `FraudDecision` - Final fraud determination
 
 ## Architecture
 
@@ -24,22 +59,23 @@ This folder contains an integrated version of Demo11 that uses:
 ClaimsCore.Workflows.ClaimsIntegrated
 ?
 ??? Uses Models from: ClaimsCore.Common
-?   ??? CustomerInfo
-?   ??? ClaimDraft  
-?   ??? ValidationResult
-?   ??? IntakeDecision
-?   ??? ClaimReadinessStatus
-?   ??? ClaimWorkflowState
+?   ??? CustomerInfo, ClaimDraft, ValidationResult
+?   ??? IntakeDecision, ClaimReadinessStatus, ClaimWorkflowState
+?   ??? FraudAnalysisState, OSINTFinding, UserHistoryFinding,
+?       TransactionFraudFinding, FraudDecision
 ?
 ??? Calls Tools from: ClaimsCoreMcp.Tools
     ??? ClaimsTools.GetCustomerProfile()
     ??? ClaimsTools.GetContract()
     ??? ClaimsTools.GetCurrentDate()
+    ??? ClaimsTools.CheckOnlineMarketplaces()
+    ??? ClaimsTools.GetClaimHistory()
+    ??? ClaimsTools.GetTransactionRiskProfile()
 ```
 
-## Workflow Structure
+## Workflow Structures
 
-The workflow structure remains identical to Demo11:
+### Demo11: Claims Intake Workflow
 
 ```
 ????????????????????????
@@ -67,6 +103,41 @@ The workflow structure remains identical to Demo11:
 ????????????????????????
 ```
 
+### Demo12: Fraud Detection Workflow
+
+```
+????????????????????????
+? DataReview           ? ? Quality check
+????????????????????????
+           ?
+????????????????????????
+? ClassificationRouter ? ? Route by claim type
+????????????????????????
+           ?
+????????????????????????
+? PropertyTheftFanOut  ? ? Dispatch to 3 agents (Fan-Out)
+????????????????????????
+           ?
+    ??????????????????????????
+    ?             ?          ?
+??????????  ????????????  ????????????
+? OSINT  ?  ? UserHist ?  ? TransFraud?
+??????????  ????????????  ????????????
+    ????????????????????????????
+                 ?
+    ??????????????????????
+    ? FraudAggregator    ? ? Collect findings (Fan-In)
+    ??????????????????????
+             ?
+    ??????????????????????
+    ? FraudDecision      ? ? Final determination
+    ??????????????????????
+             ?
+    ??????????????????????
+    ? OutcomePresenter   ? ? Generate report
+    ??????????????????????
+```
+
 ## Running the Demo
 
 ### Prerequisites
@@ -84,7 +155,21 @@ The workflow structure remains identical to Demo11:
 ```csharp
 using ClaimsCore.Workflows.ClaimsIntegrated;
 
+// Run Demo 11 Integrated
 await Demo11_ClaimsWorkflow_Integrated.Execute();
+
+// Run Demo 12 Integrated
+await Demo12_ClaimsFraudDetection_Integrated.Execute();
+```
+
+Or use the main application menu:
+```bash
+cd src/ClaimsCore.Workflows
+dotnet run
+
+# Select:
+# 2 - Demo 11 Integrated
+# 4 - Demo 12 Integrated
 ```
 
 ### Test Customers
@@ -107,13 +192,12 @@ The integrated demo has access to 6 test customers via `MockClaimsDataService`:
 | Maria Garcia | CUST-67890 | 10 (LOW) | 1 (clean) | Premium customer |
 | Hans Mueller | CUST-11111 | 5 (VERY LOW) | 0 | New customer |
 
-### Example Session
+### Example Sessions
+
+#### Demo11 Integrated - Claims Intake
 
 ```
 === Demo 11 Integrated: Claims Processing Workflow ===
-
-This demo uses ClaimsCore.Common models and ClaimsCoreMcp tools.
-...
 
 ?? Welcome to Claims Intake (Integrated Version)!
 Please describe your situation, and I'll help you file a claim.
@@ -127,6 +211,40 @@ Agent: Thank you, Mr. Smith. I found your account. Can you describe the bike?
 You: Trek X-Caliber 8, red mountain bike
 ...
 ? CLAIM PROCESSED SUCCESSFULLY
+```
+
+#### Demo12 Integrated - Fraud Detection
+
+```
+=== Demo 12 Integrated: Claims Fraud Detection Workflow ===
+
+FRAUD DETECTION ANALYSIS (Integrated Version)
+================================================================================
+
+Analyzing claim:
+  Customer: CUST-10001
+  Type: Property - BikeTheft
+  Amount: $1,200.00
+
+=== Parallel Fraud Detection (Fan-Out) ===
+=== OSINT Validation (Online Marketplaces) ===
+? OSINT Check Complete - Fraud Score: 85/100
+
+=== User History Analysis ===
+? User History Check Complete - Customer Fraud Score: 65/100
+
+=== Transaction Fraud Scoring ===
+? Transaction Analysis Complete - Fraud Score: 50/100
+
+=== All Fraud Findings Collected (Fan-In) ===
+? All findings stored in shared state!
+
+=== Final Fraud Decision ===
+FRAUD DETERMINATION: LIKELY FRAUD
+Confidence: 82%
+Recommendation: INVESTIGATE
+
+? FRAUD ANALYSIS COMPLETE
 ```
 
 ## Benefits of Integration
@@ -150,6 +268,8 @@ You: Trek X-Caliber 8, red mountain bike
 
 ### Tool Registration
 
+#### Demo11 Tools
+
 Tools are registered as lambdas that call ClaimsTools directly:
 
 ```csharp
@@ -161,13 +281,51 @@ var tools = new List<AITool>
         name: "get_customer_profile",
         description: "..."
     ),
-    // ... more tools
+    AIFunctionFactory.Create(
+        (string customerId) => ClaimsTools.GetContract(customerId),
+        name: "get_contract",
+        description: "..."
+    ),
+    AIFunctionFactory.Create(
+        () => ClaimsTools.GetCurrentDate(),
+        name: "get_current_date",
+        description: "..."
+    )
+};
+```
+
+#### Demo12 Tools
+
+Fraud detection tools registered similarly:
+
+```csharp
+var tools = new List<AITool>
+{
+    AIFunctionFactory.Create(
+        (string itemDescription, decimal itemValue) => 
+            ClaimsTools.CheckOnlineMarketplaces(itemDescription, itemValue),
+        name: "check_online_marketplaces",
+        description: "..."
+    ),
+    AIFunctionFactory.Create(
+        (string customerId) => ClaimsTools.GetClaimHistory(customerId),
+        name: "get_customer_claim_history",
+        description: "..."
+    ),
+    AIFunctionFactory.Create(
+        (decimal claimAmount, string dateOfLoss) => 
+            ClaimsTools.GetTransactionRiskProfile(claimAmount, dateOfLoss),
+        name: "get_transaction_risk_profile",
+        description: "..."
+    )
 };
 ```
 
 ### State Management
 
-The integrated version uses a simplified `ClaimWorkflowState` that doesn't track conversation history:
+Both integrated demos use simplified state models from `ClaimsCore.Common`:
+
+#### Demo11 State
 
 ```csharp
 public class ClaimWorkflowState
@@ -180,7 +338,27 @@ public class ClaimWorkflowState
 }
 ```
 
-Conversation history tracking can be added back in the workflow executors if needed for audit purposes.
+#### Demo12 State
+
+```csharp
+public class FraudAnalysisState
+{
+    public ValidationResult? OriginalClaim { get; set; }
+    public DataReviewResult? DataReview { get; set; }
+    public string ClaimType { get; set; }
+    public string ClaimSubType { get; set; }
+    
+    // Fraud findings from parallel agents
+    public OSINTFinding? OSINTFinding { get; set; }
+    public UserHistoryFinding? UserHistoryFinding { get; set; }
+    public TransactionFraudFinding? TransactionFraudFinding { get; set; }
+    
+    // Final decision
+    public FraudDecision? FraudDecision { get; set; }
+}
+```
+
+**Note**: Conversation history tracking was removed from ClaimWorkflowState to avoid circular dependencies. It can be added back in the workflow executors if needed for audit purposes.
 
 ## Next Steps
 
@@ -191,6 +369,7 @@ When ClaimsCoreMcp is deployed as a server, replace direct method calls with MCP
 ```csharp
 // Current (Direct):
 ClaimsTools.GetCustomerProfile(customerId, firstName, lastName)
+ClaimsTools.CheckOnlineMarketplaces(itemDescription, itemValue)
 
 // Future (MCP Client):
 await mcpClient.CallToolAsync("get_customer_profile", new { 
@@ -198,13 +377,18 @@ await mcpClient.CallToolAsync("get_customer_profile", new {
     first_name = firstName,
     last_name = lastName
 })
+await mcpClient.CallToolAsync("check_online_marketplaces", new {
+    item_description = itemDescription,
+    item_value = itemValue
+})
 ```
 
 ### To Add More Integrations
 
-1. Create `Demo12_ClaimsFraudDetection_Integrated.cs` following the same pattern
-2. Use `ClaimsTools.CheckOnlineMarketplaces()` and `ClaimsTools.GetTransactionRiskProfile()`
-3. Leverage shared models from `ClaimsCore.Common.Models`
+1. Create integrated versions of future demos following the same pattern
+2. Use shared models from `ClaimsCore.Common.Models`
+3. Call tools from `ClaimsCoreMcp.Tools.ClaimsTools`
+4. Add to the menu in `Program.cs`
 
 ## Project References
 
@@ -213,7 +397,8 @@ await mcpClient.CallToolAsync("get_customer_profile", new {
 
 ## See Also
 
-- [Original Demo11](../ClaimsDemo/Demo11_ClaimsWorkflow.cs) - Original implementation with local models
+- [Original Demo11](../ClaimsDemo/Demo11_ClaimsWorkflow.cs) - Original claims intake implementation
+- [Original Demo12](../ClaimsDemo/Demo12_ClaimsFraudDetection.cs) - Original fraud detection implementation
 - [ClaimsCoreMcp README](../../ClaimsCoreMcp/README.md) - MCP server documentation
 - [ClaimsCore.Common Models](../../ClaimsCore.Common/Models/) - Shared data models
 
@@ -221,8 +406,10 @@ await mcpClient.CallToolAsync("get_customer_profile", new {
 
 ? **Integrated with ClaimsCore.Common models**  
 ? **Uses ClaimsCoreMcp tools for data access**  
-? **Maintains same workflow structure as Demo11**  
+? **Demo11: Claims intake workflow**  
+? **Demo12: Fraud detection workflow**  
+? **Maintains same workflow structures as originals**  
 ? **Ready for future MCP server integration**  
 ? **Simplified state management**  
 
-This integrated version demonstrates how to build workflows that leverage shared models and tools, providing a foundation for scalable, maintainable claims processing systems.
+These integrated versions demonstrate how to build workflows that leverage shared models and tools, providing a foundation for scalable, maintainable claims processing and fraud detection systems.

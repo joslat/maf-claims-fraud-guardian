@@ -10,6 +10,7 @@ namespace ClaimsCore.Workflows;
 /// - Demo11: Claims Intake Workflow
 /// - Demo11 Integrated: Claims Intake with ClaimsCore.Common models and ClaimsCoreMcp tools
 /// - Demo12: Fraud Detection Workflow
+/// - Demo12 Integrated: Fraud Detection with ClaimsCore.Common models and ClaimsCoreMcp tools
 /// - Future workflow demos
 /// 
 /// Uses Microsoft.Agents.AI.Workflows for multi-agent orchestration
@@ -37,10 +38,11 @@ class Program
             Console.WriteLine("Available Demos:");
             Console.WriteLine("  1 - Demo 11: Claims Intake Workflow (Original)");
             Console.WriteLine("  2 - Demo 11: Claims Intake Workflow (Integrated)");
-            Console.WriteLine("  3 - Demo 12: Fraud Detection Workflow");
+            Console.WriteLine("  3 - Demo 12: Fraud Detection Workflow (Original)");
+            Console.WriteLine("  4 - Demo 12: Fraud Detection Workflow (Integrated)");
             Console.WriteLine("  q - Quit");
             Console.WriteLine(new string('=', 60));
-            Console.Write("\nSelect a demo (1, 2, 3, or q): ");
+            Console.Write("\nSelect a demo (1, 2, 3, 4, or q): ");
 
             var choice = Console.ReadLine()?.Trim().ToLower();
 
@@ -55,13 +57,16 @@ class Program
                 case "3":
                     await RunDemo12();
                     break;
+                case "4":
+                    await RunDemo12Integrated();
+                    break;
                 case "q":
                 case "quit":
                     exit = true;
                     Console.WriteLine("\n👋 Goodbye!");
                     break;
                 default:
-                    Console.WriteLine("\n⚠️  Invalid choice. Please select 1, 2, 3, or q.");
+                    Console.WriteLine("\n⚠️  Invalid choice. Please select 1, 2, 3, 4, or q.");
                     break;
             }
         }
@@ -146,7 +151,7 @@ class Program
     private static async Task RunDemo12()
     {
         Console.WriteLine("\n" + new string('=', 60));
-        Console.WriteLine("🚀 Starting Demo 12: Fraud Detection Workflow");
+        Console.WriteLine("🚀 Starting Demo 12: Fraud Detection Workflow (Original)");
         Console.WriteLine(new string('=', 60) + "\n");
         
         try
@@ -157,6 +162,32 @@ class Program
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"\n❌ Error running Demo 12: {ex.Message}");
+            Console.ResetColor();
+            Console.WriteLine($"\nStack trace:\n{ex.StackTrace}");
+        }
+        
+        Console.WriteLine("\nPress any key to return to menu...");
+        Console.ReadKey();
+    }
+
+    private static async Task RunDemo12Integrated()
+    {
+        Console.WriteLine("\n" + new string('=', 60));
+        Console.WriteLine("🚀 Starting Demo 12: Fraud Detection Workflow (Integrated)");
+        Console.WriteLine(new string('=', 60) + "\n");
+        Console.WriteLine("ℹ️  This version uses:");
+        Console.WriteLine("   • ClaimsCore.Common data models");
+        Console.WriteLine("   • ClaimsCoreMcp.Tools for fraud detection");
+        Console.WriteLine("   • MockClaimsDataService for customer data\n");
+        
+        try
+        {
+            await Demo12_ClaimsFraudDetection_Integrated.Execute();
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"\n❌ Error running Demo 12 Integrated: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine($"\nStack trace:\n{ex.StackTrace}");
         }
