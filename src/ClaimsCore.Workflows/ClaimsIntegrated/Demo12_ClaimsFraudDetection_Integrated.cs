@@ -117,7 +117,7 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
                 case WorkflowOutputEvent output:
                     Console.WriteLine("\n\n" + new string('=', 80));
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("? FRAUD ANALYSIS COMPLETE");
+                    Console.WriteLine("✅ FRAUD ANALYSIS COMPLETE");
                     Console.ResetColor();
                     Console.WriteLine(new string('=', 80));
                     Console.WriteLine();
@@ -128,21 +128,21 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
             }
         }
 
-        Console.WriteLine("\n? Demo 12 Integrated Complete!\n");
+        Console.WriteLine("\n✅ Demo 12 Integrated Complete!\n");
         Console.WriteLine("Key Concepts Demonstrated:");
-        Console.WriteLine("  ? Integration with ClaimsCore.Common models");
-        Console.WriteLine("  ? Direct calls to ClaimsCoreMcp tools");
-        Console.WriteLine("  ? Data quality review before fraud analysis");
-        Console.WriteLine("  ? Classification routing by claim type");
-        Console.WriteLine("  ? Parallel fraud detection (fan-out/fan-in pattern)");
-        Console.WriteLine("  ? OSINT validation with real marketplace data");
-        Console.WriteLine("  ? Customer history and fraud score analysis");
-        Console.WriteLine("  ? Transaction-level fraud scoring");
-        Console.WriteLine("  ? Polymorphic aggregator (handles 3 different finding types)");
-        Console.WriteLine("  ? Data passing via messages (NO state in fan-out executors)");
-        Console.WriteLine("  ? State operations in aggregator (stores collected findings)");
-        Console.WriteLine("  ? AI-powered fraud decision with confidence scores");
-        Console.WriteLine("  ? Real data from MockClaimsDataService\n");
+        Console.WriteLine("  ✓ Integration with ClaimsCore.Common models");
+        Console.WriteLine("  ✓ Direct calls to ClaimsCoreMcp tools");
+        Console.WriteLine("  ✓ Data quality review before fraud analysis");
+        Console.WriteLine("  ✓ Classification routing by claim type");
+        Console.WriteLine("  ✓ Parallel fraud detection (fan-out/fan-in pattern)");
+        Console.WriteLine("  ✓ OSINT validation with real marketplace data");
+        Console.WriteLine("  ✓ Customer history and fraud score analysis");
+        Console.WriteLine("  ✓ Transaction-level fraud scoring");
+        Console.WriteLine("  ✓ Polymorphic aggregator (handles 3 different finding types)");
+        Console.WriteLine("  ✓ Data passing via messages (NO state in fan-out executors)");
+        Console.WriteLine("  ✓ State operations in aggregator (stores collected findings)");
+        Console.WriteLine("  ✓ AI-powered fraud decision with confidence scores");
+        Console.WriteLine("  ✓ Real data from MockClaimsDataService\n");
     }
 
     // --------------------- Scenario data ---------------------
@@ -710,7 +710,7 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
             CancellationToken cancellationToken,
             Action storeFinding)
         {
-            Console.WriteLine($"[Aggregator] ? Received finding from {sourceName} ({_receivedCount + 1}/{ExpectedCount})");
+            Console.WriteLine($"[Aggregator] ✓ Received finding from {sourceName} ({_receivedCount + 1}/{ExpectedCount})");
             
             storeFinding();
             _receivedCount++;
@@ -726,7 +726,7 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
                 await SaveFraudStateAsync(context, state);
                 
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("? All findings stored in shared state!");
+                Console.WriteLine("✅ All findings stored in shared state!");
                 Console.ResetColor();
                 Console.WriteLine();
                 
@@ -781,13 +781,14 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
             await SaveFraudStateAsync(context, state);
 
             // Print readable decision
-            Console.WriteLine(new string('?', 80));
+            Console.WriteLine(new string('─', 80));
             Console.ForegroundColor = decision.IsFraud ? ConsoleColor.Red : ConsoleColor.Green;
-            Console.WriteLine($"FRAUD DETERMINATION: {(decision.IsFraud ? "LIKELY FRAUD" : "NO FRAUD DETECTED")}");
+            var icon = decision.IsFraud ? "🚨" : "✅";
+            Console.WriteLine($"{icon} FRAUD DETERMINATION: {(decision.IsFraud ? "LIKELY FRAUD" : "NO FRAUD DETECTED")}");
             Console.ResetColor();
-            Console.WriteLine($"Confidence: {decision.ConfidenceScore}%");
-            Console.WriteLine($"Recommendation: {decision.Recommendation}");
-            Console.WriteLine(new string('?', 80));
+            Console.WriteLine($"📊 Confidence: {decision.ConfidenceScore}%");
+            Console.WriteLine($"📝 Recommendation: {decision.Recommendation}");
+            Console.WriteLine(new string('─', 80));
             Console.WriteLine();
 
             return decision;
