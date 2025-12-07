@@ -1,4 +1,5 @@
 ﻿using ClaimsCore.Workflows.ClaimsIntegrated;
+using ClaimsCore.Workflows.DevUI;
 
 namespace ClaimsCore.Workflows;
 
@@ -34,9 +35,11 @@ class Program
             Console.WriteLine("Available Demos:");
             Console.WriteLine("  1 - Demo 11: Claims Intake Workflow (Integrated)");
             Console.WriteLine("  2 - Demo 12: Fraud Detection Workflow (Integrated)");
+            Console.WriteLine("  3 - Demo 12: Fraud Detection with DevUI (Web Interface)");
+            Console.WriteLine("  4 - Sample: Agent Workflow Basic with DevUI");
             Console.WriteLine("  q - Quit");
             Console.WriteLine(new string('=', 60));
-            Console.Write("\nSelect a demo (1, 2, or q): ");
+            Console.Write("\nSelect a demo (1, 2, 3, 4, or q): ");
 
             var choice = Console.ReadLine()?.Trim().ToLower();
 
@@ -48,13 +51,19 @@ class Program
                 case "2":
                     await RunDemo12Integrated();
                     break;
+                case "3":
+                    await RunDemo12IntegratedWithDevUI();
+                    break;
+                case "4":
+                    await RunSampleAgentWorkflowBasic();
+                    break;
                 case "q":
                 case "quit":
                     exit = true;
                     Console.WriteLine("\n👋 Goodbye!");
                     break;
                 default:
-                    Console.WriteLine("\n⚠️  Invalid choice. Please select 1, 2, or q.");
+                    Console.WriteLine("\n⚠️  Invalid choice. Please select 1, 2, 3, 4, or q.");
                     break;
             }
         }
@@ -174,4 +183,94 @@ class Program
         Console.WriteLine("\nPress any key to return to menu...");
         Console.ReadKey();
     }
+
+    private static async Task RunDemo12IntegratedWithDevUI()
+    {
+        Console.WriteLine("\n" + new string('=', 60));
+        Console.WriteLine("🌐 Demo 12: Fraud Detection with DevUI");
+        Console.WriteLine(new string('=', 60) + "\n");
+        Console.WriteLine("ℹ️  This version provides:");
+        Console.WriteLine("   • Browser-based workflow visualization");
+        Console.WriteLine("   • Interactive step-by-step execution");
+        Console.WriteLine("   • Real-time agent outputs");
+        Console.WriteLine("   • Workflow state inspection\n");
+        
+        Console.WriteLine(new string('-', 60));
+        Console.WriteLine("Select Default Risk Scenario:");
+        Console.WriteLine("  1 - HIGH RISK (default)");
+        Console.WriteLine("      Hello Kitty Bike - CHF 15,000");
+        Console.WriteLine("  2 - LOW RISK");
+        Console.WriteLine("      Samsung Phone - CHF 850");
+        Console.WriteLine("  3 - MODERATE RISK");
+        Console.WriteLine("      VW Golf GTI - CHF 38,000");
+        Console.WriteLine(new string('-', 60));
+        Console.Write("Enter scenario (1, 2, or 3) [default: 1]: ");
+        
+        var scenarioInput = Console.ReadLine()?.Trim();
+        var scenario = 1;
+        
+        if (!string.IsNullOrEmpty(scenarioInput) && int.TryParse(scenarioInput, out int parsedScenario))
+        {
+            if (parsedScenario >= 1 && parsedScenario <= 3)
+            {
+                scenario = parsedScenario;
+            }
+        }
+
+        Console.Write("\nEnter port number [default: 5173]: ");
+        var portInput = Console.ReadLine()?.Trim();
+        var port = 5173;
+        
+        if (!string.IsNullOrEmpty(portInput) && int.TryParse(portInput, out int parsedPort))
+        {
+            port = parsedPort;
+        }
+        
+        try
+        {
+            await Demo12_ClaimsFraudDetection_Integrated.ExecuteWithDevUI(scenario, port);
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"\n❌ Error running Demo 12 with DevUI: {ex.Message}");
+            Console.ResetColor();
+            Console.WriteLine($"\nStack trace:\n{ex.StackTrace}");
+            
+            Console.WriteLine("\nPress any key to return to menu...");
+            Console.ReadKey();
+        }
+    }
+
+    private static async Task RunSampleAgentWorkflowBasic()
+    {
+        Console.WriteLine("\n" + new string('=', 60));
+        Console.WriteLine("🌐 Sample: Agent Workflow Basic with DevUI");
+        Console.WriteLine(new string('=', 60) + "\n");
+        Console.WriteLine("ℹ️  This sample demonstrates:");
+        Console.WriteLine("   • Setting up simple AI agents with DevUI");
+        Console.WriteLine("   • Creating a sequential workflow");
+        Console.WriteLine("   • Interactive browser-based testing");
+        Console.WriteLine("   • Real-time agent interaction\n");
+        
+        try
+        {
+            await Sample_AgentWorkflowBasic.Execute();
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"\n❌ Error running Sample Agent Workflow Basic: {ex.Message}");
+            Console.ResetColor();
+            Console.WriteLine($"\nStack trace:\n{ex.StackTrace}");
+            
+            Console.WriteLine("\nPress any key to return to menu...");
+            Console.ReadKey();
+        }
+    }
 }
+
+
+
+
+

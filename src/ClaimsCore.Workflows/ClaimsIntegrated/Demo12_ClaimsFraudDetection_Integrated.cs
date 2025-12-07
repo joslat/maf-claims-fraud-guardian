@@ -10,9 +10,14 @@ using ClaimsCore.Common.Models;
 using ClaimsCoreMcp.Tools;
 using MAFPlayground.Utils;
 using Microsoft.Agents.AI;
+using Microsoft.Agents.AI.DevUI;
+using Microsoft.Agents.AI.Hosting;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Agents.AI.Workflows.Reflection;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace ClaimsCore.Workflows.ClaimsIntegrated;
 
@@ -145,6 +150,99 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
         Console.WriteLine("  ✓ Real data from MockClaimsDataService\n");
     }
 
+    /// <summary>
+    /// Execute the fraud detection workflow with DevUI web interface.
+    /// Provides a browser-based UI for visualizing and interacting with the workflow.
+    /// Includes a failsafe to provide default input if none is supplied.
+    /// </summary>
+    public static async Task ExecuteWithDevUI(int scenario = 1, int port = 5000)
+    {
+        // Set console encoding to UTF-8 to support emojis and special characters
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+        Console.WriteLine("=== Demo 12 Integrated: Fraud Detection with DevUI ===\n");
+        Console.WriteLine($"📋 Default scenario: {GetScenarioName(scenario)}\n");
+        Console.WriteLine("Setting up web server with DevUI for workflow visualization...\n");
+
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = Environments.Development // Force Development mode for DevUI
+        });
+
+        // Azure OpenAI setup
+        var azureClient = new AzureOpenAIClient(AIConfig.Endpoint, AIConfig.KeyCredential);
+        var deploymentName = "gpt-4o";
+        var chatClient = azureClient.GetChatClient(deploymentName).AsIChatClient();
+
+        builder.Services.AddChatClient(chatClient);
+
+        // Register the fraud detection workflow
+        Console.WriteLine("Registering fraud detection workflow...");
+        
+        builder.AddWorkflow("fraud-detection-integrated", (sp, key) =>
+        {
+            // Build the workflow with the default scenario claim as entry point
+            var workflow = BuildFraudDetectionWorkflowWithFailsafe(chatClient, scenario);
+            
+            return workflow;
+        }).AddAsAIAgent();
+        
+        Console.WriteLine("  ✓ fraud-detection-integrated - Claims fraud detection pipeline");
+
+        // Configure DevUI services
+        builder.Services.AddOpenAIResponses();
+        builder.Services.AddOpenAIConversations();
+
+        var app = builder.Build();
+
+        // Override default port
+        app.Urls.Clear();
+        app.Urls.Add($"http://localhost:{port}");
+
+        // Map DevUI endpoints
+        app.MapOpenAIResponses();
+        app.MapOpenAIConversations();
+        app.MapDevUI();
+
+        // Display usage information
+        var url = $"http://localhost:{port}";
+        
+        Console.WriteLine("\n" + new string('=', 80));
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("✅ DevUI Server Started Successfully!");
+        Console.ResetColor();
+        Console.WriteLine(new string('=', 80));
+        
+        Console.WriteLine("\n📊 Available Endpoints:");
+        Console.WriteLine($"  • DevUI Interface:           {url}/devui");
+        Console.WriteLine($"  • OpenAI Responses API:      {url}/v1/responses");
+        Console.WriteLine($"  • OpenAI Conversations API:  {url}/v1/conversations");
+        
+        Console.WriteLine("\n🔍 Registered Workflow:");
+        Console.WriteLine("  • fraud-detection-integrated - Claims fraud detection pipeline");
+        Console.WriteLine($"    Default scenario: {GetScenarioName(scenario)}");
+        
+        Console.WriteLine("\n💡 How to Use:");
+        Console.WriteLine($"  1. Open your browser to: {url}/devui");
+        Console.WriteLine("  2. Select 'fraud-detection-integrated' from the agent dropdown");
+        Console.WriteLine("  3. Click 'Start' to run with default scenario, or provide JSON input:");
+        Console.WriteLine("     • Empty input = uses default scenario");
+        Console.WriteLine("     • Number (1-3) = selects specific scenario");
+        Console.WriteLine("     • JSON = ValidationResult object");
+        Console.WriteLine("  4. View the fraud analysis pipeline in real-time");
+        Console.WriteLine("  5. Inspect traces, agent outputs, and fraud scores");
+        
+        Console.WriteLine("\n📝 Example Inputs:");
+        Console.WriteLine("  • Leave empty (uses scenario 1 - Hello Kitty bike)");
+        Console.WriteLine("  • Type: 2 (uses scenario 2 - Mobile phone)");
+        Console.WriteLine("  • Type: 3 (uses scenario 3 - Car theft)");
+        
+        Console.WriteLine("\n⚠️  Press Ctrl+C to stop the server");
+        Console.WriteLine(new string('=', 80) + "\n");
+
+        await app.RunAsync();
+    }
+
     // --------------------- Scenario data ---------------------
     private static string GetScenarioName(int scenario) => scenario switch
     {
@@ -269,6 +367,69 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
             .AddEdge(fraudAggregatorExec, fraudDecisionExec)
             .AddEdge(fraudDecisionExec, outcomeExec)
             .WithOutputFrom(outcomeExec)
+            .Build();
+    }
+
+    /// <summary>
+    /// Builds the fraud detection workflow with a failsafe input executor for DevUI.
+    /// If no input is provided via DevUI, the failsafe provides a default ValidationResult.
+    /// </summary>
+    private static Workflow BuildFraudDetectionWorkflowWithFailsafe(IChatClient chatClient, int scenario)
+    {
+        // Register tools that call ClaimsTools directly
+        var tools = new List<AITool>
+        {
+            AIFunctionFactory.Create(
+                (string itemDescription, decimal itemValue) => 
+                    ClaimsTools.CheckOnlineMarketplaces(itemDescription, itemValue),
+                name: "check_online_marketplaces",
+                description: "Check if stolen property is listed for sale on online marketplaces. Used for OSINT fraud detection."
+            ),
+            AIFunctionFactory.Create(
+                (string customerId) => ClaimsTools.GetClaimHistory(customerId),
+                name: "get_customer_claim_history",
+                description: "Return all past claims for the customer with basic metadata and statuses. Used for risk and behavior analysis."
+            ),
+            AIFunctionFactory.Create(
+                (decimal claimAmount, string dateOfLoss) => 
+                    ClaimsTools.GetTransactionRiskProfile(claimAmount, dateOfLoss),
+                name: "get_transaction_risk_profile",
+                description: "Analyze transaction risk profile for fraud indicators based on claim amount and timing patterns."
+            )
+        };
+
+        // Agents
+        var dataReviewAgent = GetDataReviewAgent(chatClient);
+        var osintAgent = GetOSINTAgent(chatClient, tools);
+        var userHistoryAgent = GetUserHistoryAgent(chatClient, tools);
+        var transactionAgent = GetTransactionFraudAgent(chatClient, tools);
+        var fraudDecisionAgent = GetFraudDecisionAgent(chatClient);
+        var outcomePresenterAgent = GetOutcomePresenterAgent(chatClient);
+
+        // Executors
+        var failsafeInputExec = new FailsafeInputExecutor(scenario); // Provides default input if none supplied
+        var dataReviewExec = new DataReviewExecutor(dataReviewAgent);
+        var classificationExec = new ClassificationRouterExecutor();
+        var propertyTheftFanOutExec = new PropertyTheftFanOutExecutor();
+        var osintExec = new OSINTExecutor(osintAgent);
+        var userHistoryExec = new UserHistoryExecutor(userHistoryAgent);
+        var transactionExec = new TransactionFraudExecutor(transactionAgent);
+        var fraudAggregatorExec = new FraudAggregatorExecutor();
+        var fraudDecisionExec = new FraudDecisionExecutor(fraudDecisionAgent);
+        var outcomeExec = new OutcomePresenterExecutor(outcomePresenterAgent);
+
+        // Build workflow with failsafe input executor
+        return new WorkflowBuilder(failsafeInputExec)  // Start with failsafe
+            .AddEdge(failsafeInputExec, dataReviewExec)
+            .AddEdge<DataReviewResult>(dataReviewExec, classificationExec, 
+                condition: dr => dr is not null && dr.Proceed)
+            .AddEdge(classificationExec, propertyTheftFanOutExec)
+            .AddFanOutEdge(propertyTheftFanOutExec, targets: [osintExec, userHistoryExec, transactionExec])
+            .AddFanInEdge(fraudAggregatorExec, sources: [osintExec, userHistoryExec, transactionExec])
+            .AddEdge(fraudAggregatorExec, fraudDecisionExec)
+            .AddEdge(fraudDecisionExec, outcomeExec)
+            .WithOutputFrom(outcomeExec)
+            .WithName("fraud-detection-integrated")
             .Build();
     }
 
@@ -418,6 +579,89 @@ internal static class Demo12_ClaimsFraudDetection_Integrated
             """);
 
     // --------------------- Executors ---------------------
+
+    /// <summary>
+    /// FailsafeInputExecutor - Provides default input if none is supplied (for DevUI).
+    /// Handles ChatMessage input from DevUI and converts it to ValidationResult.
+    /// Supports:
+    /// - Empty message content -> uses default scenario
+    /// - Number (1-3) -> selects specific scenario
+    /// - JSON -> parses as ValidationResult object
+    /// </summary>
+    private sealed class FailsafeInputExecutor :
+        ReflectingExecutor<FailsafeInputExecutor>,
+        IMessageHandler<ChatMessage, ValidationResult>
+    {
+        private readonly int _defaultScenario;
+
+        public FailsafeInputExecutor(int defaultScenario = 1) : base("FailsafeInput")
+        {
+            _defaultScenario = defaultScenario;
+        }
+
+        // Handle workflow entry from DevUI - expects ChatMessage input, returns ValidationResult
+        public async ValueTask<ValidationResult> HandleAsync(
+            ChatMessage message,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
+        {
+            Console.WriteLine($"📌 FailsafeInput: Processing workflow entry from DevUI");
+            
+            // Extract text content from ChatMessage
+            var input = message.Text ?? string.Empty;
+            Console.WriteLine($"   Message content: '{(string.IsNullOrWhiteSpace(input) ? "(empty)" : input)}'");
+            
+            ValidationResult claimToProcess;
+            
+            // If input is null, empty, or whitespace -> use default scenario
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                Console.WriteLine($"⚠️  No input provided - using default scenario {_defaultScenario}");
+                claimToProcess = GetMockClaim(_defaultScenario);
+            }
+            // Try to parse as scenario number (1-3)
+            else if (int.TryParse(input.Trim(), out int scenarioNumber) && scenarioNumber >= 1 && scenarioNumber <= 3)
+            {
+                Console.WriteLine($"✅ FailsafeInput: Scenario {scenarioNumber} selected");
+                claimToProcess = GetMockClaim(scenarioNumber);
+            }
+            // Try to parse as JSON ValidationResult
+            else if (input.TrimStart().StartsWith("{"))
+            {
+                try
+                {
+                    Console.WriteLine($"✅ FailsafeInput: Parsing JSON ValidationResult");
+                    var parsedClaim = JsonSerializer.Deserialize<ValidationResult>(input, JsonSerializerOptions.Web);
+                    
+                    if (parsedClaim != null && parsedClaim.Ready)
+                    {
+                        claimToProcess = parsedClaim;
+                        Console.WriteLine($"   Successfully parsed ValidationResult for customer {parsedClaim.CustomerId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️  Parsed ValidationResult is not ready - using default scenario {_defaultScenario}");
+                        claimToProcess = GetMockClaim(_defaultScenario);
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"⚠️  Failed to parse JSON: {ex.Message}");
+                    Console.WriteLine($"   Using default scenario {_defaultScenario}");
+                    claimToProcess = GetMockClaim(_defaultScenario);
+                }
+            }
+            // Unrecognized input -> use default scenario
+            else
+            {
+                Console.WriteLine($"⚠️  Unrecognized input format - using default scenario {_defaultScenario}");
+                claimToProcess = GetMockClaim(_defaultScenario);
+            }
+            
+            // Return the ValidationResult to be passed to the next executor
+            return claimToProcess;
+        }
+    }
 
     private sealed class DataReviewExecutor :
         ReflectingExecutor<DataReviewExecutor>,
