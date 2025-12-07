@@ -163,4 +163,84 @@ public static class ClaimsTools
 
         return JsonSerializer.Serialize(suspiciousClaims, _jsonOptions);
     }
+
+    /// <summary>
+    /// Get the current date and time. Used for setting date_reported in claims intake workflow.
+    /// </summary>
+    /// <returns>Current date, time, day of week, and formatted timestamp</returns>
+    [McpServerTool(Name = "get_current_date")]
+    [Description("Get the current date and time. Used for setting date_reported in claims intake workflow.")]
+    public static string GetCurrentDate()
+    {
+        var now = DateTime.Now;
+        
+        var result = new
+        {
+            current_date = now.ToString("yyyy-MM-dd"),
+            current_time = now.ToString("HH:mm:ss"),
+            day_of_week = now.DayOfWeek.ToString(),
+            formatted = now.ToString("dddd, MMMM dd, yyyy 'at' h:mm tt")
+        };
+
+        return JsonSerializer.Serialize(result, _jsonOptions);
+    }
+
+    /// <summary>
+    /// Check if stolen property is listed for sale on online marketplaces. Used for OSINT fraud detection.
+    /// </summary>
+    /// <param name="itemDescription">Description of the stolen item</param>
+    /// <param name="itemValue">Approximate value of the item</param>
+    /// <returns>Marketplace check results with fraud indicator score</returns>
+    [McpServerTool(Name = "check_online_marketplaces")]
+    [Description("Check if stolen property is listed for sale on online marketplaces. Used for OSINT fraud detection.")]
+    public static string CheckOnlineMarketplaces(
+        [Description("Description of the stolen item (e.g., 'Trek X-Caliber 8, red mountain bike')")] string itemDescription,
+        [Description("Approximate value of the item in CHF")] decimal itemValue)
+    {
+        if (string.IsNullOrWhiteSpace(itemDescription))
+        {
+            return JsonSerializer.Serialize(new
+            {
+                error = "Invalid input",
+                message = "item_description is required."
+            }, _jsonOptions);
+        }
+
+        var marketplaceResult = _dataService.CheckOnlineMarketplaces(itemDescription, itemValue);
+        return JsonSerializer.Serialize(marketplaceResult, _jsonOptions);
+    }
+
+    /// <summary>
+    /// Analyze transaction risk profile for fraud indicators based on claim amount and timing patterns.
+    /// </summary>
+    /// <param name="claimAmount">Claim amount in CHF</param>
+    /// <param name="dateOfLoss">Date when the incident occurred (yyyy-MM-dd format)</param>
+    /// <returns>Risk profile with transaction risk score, red flags, and anomaly detection</returns>
+    [McpServerTool(Name = "get_transaction_risk_profile")]
+    [Description("Analyze transaction risk profile for fraud indicators based on claim amount and timing patterns.")]
+    public static string GetTransactionRiskProfile(
+        [Description("Claim amount in CHF")] decimal claimAmount,
+        [Description("Date of loss in yyyy-MM-dd format")] string dateOfLoss)
+    {
+        if (string.IsNullOrWhiteSpace(dateOfLoss))
+        {
+            return JsonSerializer.Serialize(new
+            {
+                error = "Invalid input",
+                message = "date_of_loss is required."
+            }, _jsonOptions);
+        }
+
+        if (!DateTime.TryParse(dateOfLoss, out _))
+        {
+            return JsonSerializer.Serialize(new
+            {
+                error = "Invalid date format",
+                message = "date_of_loss must be in yyyy-MM-dd format."
+            }, _jsonOptions);
+        }
+
+        var riskProfile = _dataService.GetTransactionRiskProfile(claimAmount, dateOfLoss);
+        return JsonSerializer.Serialize(riskProfile, _jsonOptions);
+    }
 }

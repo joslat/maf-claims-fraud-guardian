@@ -34,7 +34,12 @@ Return all past claims for the customer with basic metadata and statuses. Used f
 
 **Input**: `customer_id`
 
-**Response**: List of all claims with status, amounts, and fraud flags
+**Response**: List of all claims with status, amounts, fraud flags, and computed summary fields:
+- `total_claims`: Total number of claims
+- `claims_last_12_months`: Claims filed in the last 12 months
+- `previous_fraud_flags`: Number of claims flagged for fraud
+- `customer_fraud_score`: Computed fraud risk score (0-100)
+- `claim_history_summary`: Human-readable claim summaries
 
 ### 4. `get_suspicious_claims`
 
@@ -43,6 +48,42 @@ Return only the claims that are considered suspicious or flagged for fraud, plus
 **Input**: `customer_id`
 
 **Response**: Suspicious claims with suspicion scores, reason codes, and summary
+
+### 5. `get_current_date`
+
+Get the current date and time. Used for setting `date_reported` in claims intake workflow.
+
+**Inputs**: None
+
+**Response**: Current date, time, day of week, and formatted timestamp
+
+### 6. `check_online_marketplaces`
+
+Check if stolen property is listed for sale on online marketplaces. Used for OSINT fraud detection.
+
+**Inputs**:
+- `item_description`: Description of the stolen item (e.g., "Trek X-Caliber 8, red mountain bike")
+- `item_value`: Approximate value of the item in CHF
+
+**Response**: Marketplace check results with fraud indicator score (0-100)
+- `marketplaces_checked`: List of marketplaces scanned
+- `item_found`: Whether matching listings were found
+- `matching_listings`: Details of suspicious listings
+- `fraud_indicator`: Risk score based on findings
+
+### 7. `get_transaction_risk_profile`
+
+Analyze transaction risk profile for fraud indicators based on claim amount and timing patterns.
+
+**Inputs**:
+- `claim_amount`: Claim amount in CHF
+- `date_of_loss`: Date when the incident occurred (yyyy-MM-dd format)
+
+**Response**: Risk profile with transaction risk score and red flags
+- `amount_percentile`: How the claim amount compares to typical claims
+- `timing_anomaly`: Whether the claim timing is suspicious
+- `red_flags`: List of detected risk factors
+- `transaction_risk_score`: Overall risk score (0-100)
 
 ## Typical Flow
 
@@ -88,13 +129,23 @@ curl http://localhost:5050/
 
 ## Sample Data
 
-The server includes mock data for testing:
+The server includes mock data for testing with **6 customers** (3 original + 3 from workflows):
 
-| Customer ID | Name | Segment |
-|-------------|------|---------|
-| CUST-12345 | Jose Latorre | Retail |
-| CUST-67890 | Maria Garcia | Premium |
-| CUST-11111 | Hans Mueller | Retail |
+### Original MCP Customers
+
+| Customer ID | Name | Segment | Notes |
+|-------------|------|---------|-------|
+| CUST-12345 | Jose Latorre | Retail | Has 2 claims, 1 fraud flag |
+| CUST-67890 | Maria Garcia | Premium | Clean record, 1 approved claim |
+| CUST-11111 | Hans Mueller | Retail | No claim history |
+
+### Workflow Customers (Demo11/Demo12 Compatible)
+
+| Customer ID | Name | Segment | Notes |
+|-------------|------|---------|-------|
+| CUST-10001 | John Smith | Retail | High fraud score (65), 5 claims, 1 flagged |
+| CUST-10002 | Jane Doe | Premium | Low fraud score (20), 2 claims, clean |
+| CUST-10003 | Alice Johnson | Retail | Low fraud score (10), 1 pending claim |
 
 ## Deployment
 

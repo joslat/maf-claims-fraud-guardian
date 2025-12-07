@@ -12,6 +12,27 @@ public class ClaimHistoryResponse
 
     [JsonPropertyName("claims")]
     public List<Claim> Claims { get; set; } = [];
+
+    // ===== Computed Summary Fields (Workflow Compatibility) =====
+
+    [JsonPropertyName("total_claims")]
+    public int TotalClaims => Claims.Count;
+
+    [JsonPropertyName("claims_last_12_months")]
+    public int ClaimsLast12Months => Claims.Count(c =>
+        DateTime.TryParse(c.ReportedDate, out var date) &&
+        date > DateTime.Now.AddMonths(-12));
+
+    [JsonPropertyName("previous_fraud_flags")]
+    public int PreviousFraudFlags => Claims.Count(c => c.FraudFlag);
+
+    [JsonPropertyName("customer_fraud_score")]
+    public int CustomerFraudScore { get; set; }
+
+    [JsonPropertyName("claim_history_summary")]
+    public List<string> ClaimHistorySummary => Claims
+        .Select(c => $"{c.ReportedDate}: {c.SubType} - {c.Status.ToUpperInvariant()} - {c.PaidAmount.Currency} {c.PaidAmount.Amount}")
+        .ToList();
 }
 
 public class Claim
