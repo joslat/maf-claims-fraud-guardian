@@ -1,5 +1,8 @@
 using System.Text.Json.Serialization;
 
+// SPDX-License-Identifier: LicenseRef-MAFClaimsFraudGuardian-NPU-1.0-CH
+// Copyright (c) 2025 Jose Luis Latorre
+
 namespace ClaimsCore.Common.Models;
 
 /// <summary>

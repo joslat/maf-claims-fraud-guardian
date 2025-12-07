@@ -1,4 +1,7 @@
-﻿using ClaimsCore.Workflows.ClaimsIntegrated;
+﻿// SPDX-License-Identifier: LicenseRef-MAFClaimsFraudGuardian-NPU-1.0-CH
+// Copyright (c) 2025 Jose Luis Latorre
+
+using ClaimsCore.Workflows.ClaimsIntegrated;
 using ClaimsCore.Workflows.DevUI;
 
 namespace ClaimsCore.Workflows;

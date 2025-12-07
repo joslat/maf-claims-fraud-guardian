@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-MAFPlayground-NPU-1.0-CH
+// SPDX-License-Identifier: LicenseRef-MAFClaimsFraudGuardian-NPU-1.0-CH
 // Copyright (c) 2025 Jose Luis Latorre
 
 using Azure;
