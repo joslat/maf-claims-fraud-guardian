@@ -1,4 +1,5 @@
 ﻿using ClaimsCore.Workflows.ClaimsDemo;
+using ClaimsCore.Workflows.ClaimsIntegrated;
 
 namespace ClaimsCore.Workflows;
 
@@ -7,6 +8,7 @@ namespace ClaimsCore.Workflows;
 /// 
 /// This application provides AI-powered workflow orchestration for:
 /// - Demo11: Claims Intake Workflow
+/// - Demo11 Integrated: Claims Intake with ClaimsCore.Common models and ClaimsCoreMcp tools
 /// - Demo12: Fraud Detection Workflow
 /// - Future workflow demos
 /// 
@@ -33,11 +35,12 @@ class Program
         {
             Console.WriteLine("\n" + new string('=', 60));
             Console.WriteLine("Available Demos:");
-            Console.WriteLine("  1 - Demo 11: Claims Intake Workflow");
-            Console.WriteLine("  2 - Demo 12: Fraud Detection Workflow");
+            Console.WriteLine("  1 - Demo 11: Claims Intake Workflow (Original)");
+            Console.WriteLine("  2 - Demo 11: Claims Intake Workflow (Integrated)");
+            Console.WriteLine("  3 - Demo 12: Fraud Detection Workflow");
             Console.WriteLine("  q - Quit");
             Console.WriteLine(new string('=', 60));
-            Console.Write("\nSelect a demo (1, 2, or q): ");
+            Console.Write("\nSelect a demo (1, 2, 3, or q): ");
 
             var choice = Console.ReadLine()?.Trim().ToLower();
 
@@ -47,15 +50,18 @@ class Program
                     await RunDemo11();
                     break;
                 case "2":
+                    await RunDemo11Integrated();
+                    break;
+                case "3":
                     await RunDemo12();
                     break;
                 case "q":
                 case "quit":
                     exit = true;
-                    Console.WriteLine("\n?? Goodbye!");
+                    Console.WriteLine("\n👋 Goodbye!");
                     break;
                 default:
-                    Console.WriteLine("\n??  Invalid choice. Please select 1, 2, or q.");
+                    Console.WriteLine("\n⚠️  Invalid choice. Please select 1, 2, 3, or q.");
                     break;
             }
         }
@@ -92,7 +98,7 @@ class Program
     private static async Task RunDemo11()
     {
         Console.WriteLine("\n" + new string('=', 60));
-        Console.WriteLine("?? Starting Demo 11: Claims Intake Workflow");
+        Console.WriteLine("🚀 Starting Demo 11: Claims Intake Workflow (Original)");
         Console.WriteLine(new string('=', 60) + "\n");
         
         try
@@ -102,7 +108,33 @@ class Program
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"\n? Error running Demo 11: {ex.Message}");
+            Console.WriteLine($"\n❌ Error running Demo 11: {ex.Message}");
+            Console.ResetColor();
+            Console.WriteLine($"\nStack trace:\n{ex.StackTrace}");
+        }
+        
+        Console.WriteLine("\nPress any key to return to menu...");
+        Console.ReadKey();
+    }
+
+    private static async Task RunDemo11Integrated()
+    {
+        Console.WriteLine("\n" + new string('=', 60));
+        Console.WriteLine("🚀 Starting Demo 11: Claims Intake Workflow (Integrated)");
+        Console.WriteLine(new string('=', 60) + "\n");
+        Console.WriteLine("ℹ️  This version uses:");
+        Console.WriteLine("   • ClaimsCore.Common data models");
+        Console.WriteLine("   • ClaimsCoreMcp.Tools for data access");
+        Console.WriteLine("   • MockClaimsDataService for customer data\n");
+        
+        try
+        {
+            await Demo11_ClaimsWorkflow_Integrated.Execute();
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"\n❌ Error running Demo 11 Integrated: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine($"\nStack trace:\n{ex.StackTrace}");
         }
@@ -114,7 +146,7 @@ class Program
     private static async Task RunDemo12()
     {
         Console.WriteLine("\n" + new string('=', 60));
-        Console.WriteLine("?? Starting Demo 12: Fraud Detection Workflow");
+        Console.WriteLine("🚀 Starting Demo 12: Fraud Detection Workflow");
         Console.WriteLine(new string('=', 60) + "\n");
         
         try
@@ -124,7 +156,7 @@ class Program
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"\n? Error running Demo 12: {ex.Message}");
+            Console.WriteLine($"\n❌ Error running Demo 12: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine($"\nStack trace:\n{ex.StackTrace}");
         }

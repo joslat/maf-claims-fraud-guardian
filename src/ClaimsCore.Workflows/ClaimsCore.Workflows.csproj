@@ -16,15 +16,14 @@
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-preview.251110.2" />
     <PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.0.0-preview.251110.2" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.0-preview.1.25559.3" />
-    <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.3" />
+    <PackageReference Include="ModelContextProtocol" Version="0.4.1-preview.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ClaimsCore.Common\ClaimsCore.Common.csproj" />
+    <ProjectReference Include="..\ClaimsCoreMcp\ClaimsCoreMcp.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ClaimsIntegrated\" />
-  </ItemGroup>
+
 
 </Project>

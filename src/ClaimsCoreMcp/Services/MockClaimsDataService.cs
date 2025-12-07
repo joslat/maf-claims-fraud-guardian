@@ -376,8 +376,8 @@ public class MockClaimsDataService
                         Status = "Active",
                         Period = new ContractPeriod
                         {
-                            StartDate = "2023-01-01",
-                            EndDate = "2025-01-01"
+                            StartDate = "2025-01-01",
+                            EndDate = "2027-01-01"
                         },
                         Coverage = new CoverageInfo
                         {
@@ -402,7 +402,7 @@ public class MockClaimsDataService
                         Period = new ContractPeriod
                         {
                             StartDate = "2023-01-01",
-                            EndDate = "2025-01-01"
+                            EndDate = "2027-01-01"
                         },
                         Coverage = new CoverageInfo
                         {
@@ -427,7 +427,7 @@ public class MockClaimsDataService
                         Period = new ContractPeriod
                         {
                             StartDate = "2023-01-01",
-                            EndDate = "2025-01-01"
+                            EndDate = "2027-01-01"
                         },
                         Coverage = new CoverageInfo
                         {
