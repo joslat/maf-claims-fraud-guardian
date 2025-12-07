@@ -27,6 +27,14 @@ public class CustomerProfile
 
     [JsonPropertyName("address")]
     public AddressInfo Address { get; set; } = new();
+
+    // ===== Workflow Compatibility - Flat email property =====
+
+    /// <summary>
+    /// Flat email property for workflow compatibility (extracts from Contact.Email).
+    /// </summary>
+    [JsonPropertyName("email")]
+    public string Email => Contact?.Email ?? string.Empty;
 }
 
 public class ContactInfo

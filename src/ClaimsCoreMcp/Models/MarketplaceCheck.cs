@@ -18,4 +18,16 @@ public class MarketplaceCheckResponse
 
     [JsonPropertyName("fraud_indicator")]
     public int FraudIndicator { get; set; }
+
+    // ===== Workflow Compatibility =====
+
+    [JsonPropertyName("summary")]
+    public string Summary { get; set; } = string.Empty;
+
+    // Alias properties for workflow field name compatibility
+    [JsonPropertyName("item_found_online")]
+    public bool ItemFoundOnline => ItemFound;
+
+    [JsonPropertyName("fraud_indicator_score")]
+    public int FraudIndicatorScore => FraudIndicator;
 }

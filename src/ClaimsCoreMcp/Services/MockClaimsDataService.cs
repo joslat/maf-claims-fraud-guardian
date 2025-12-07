@@ -61,12 +61,17 @@ public class MockClaimsDataService
             ? new List<string> { $"Ricardo.ch listing: Similar item, CHF {itemValue * 0.8m:F0} - Listed 3 days after reported theft" }
             : new List<string>();
 
+        var summary = found
+            ? $"ALERT: Potential match found online. Item similar to '{itemDescription}' listed on Ricardo.ch for CHF {itemValue * 0.8m:F0}, posted shortly after reported theft. High fraud indicator."
+            : $"No suspicious listings found for '{itemDescription}' on checked marketplaces. Low fraud indicator.";
+
         return new MarketplaceCheckResponse
         {
             MarketplacesChecked = marketplaces,
             ItemFound = found,
             MatchingListings = matchingListings,
-            FraudIndicator = fraudIndicator
+            FraudIndicator = fraudIndicator,
+            Summary = summary
         };
     }
 
@@ -84,13 +89,20 @@ public class MockClaimsDataService
 
         var riskScore = redFlags.Count * 25;
         var amountPercentile = highValue ? 85 : 35;
+        var anomalyScore = riskScore; // Same as risk score for simplicity
+
+        var summary = riskScore > 50
+            ? $"HIGH RISK: Claim amount CHF {claimAmount} with {redFlags.Count} red flags detected. Immediate investigation recommended."
+            : $"LOW RISK: Claim amount CHF {claimAmount} appears normal. No significant red flags detected.";
 
         return new TransactionRiskProfile
         {
             AmountPercentile = amountPercentile,
             TimingAnomaly = recent,
             RedFlags = redFlags,
-            TransactionRiskScore = riskScore
+            TransactionRiskScore = riskScore,
+            AnomalyScore = anomalyScore,
+            Summary = summary
         };
     }
 
@@ -559,6 +571,7 @@ public class MockClaimsDataService
             {
                 CustomerId = "CUST-12345",
                 CustomerFraudScore = 45, // Moderate - has 1 fraud flag
+                Summary = "Moderate risk customer with 2 claims, 1 flagged for fraud. Previous electronics claim rejected due to inconsistent story.",
                 Claims =
                 [
                     new Claim
@@ -591,6 +604,7 @@ public class MockClaimsDataService
             {
                 CustomerId = "CUST-67890",
                 CustomerFraudScore = 10, // Low - clean record
+                Summary = "Low risk customer with clean claim history. Single approved home contents claim.",
                 Claims =
                 [
                     new Claim
@@ -611,6 +625,7 @@ public class MockClaimsDataService
             {
                 CustomerId = "CUST-11111",
                 CustomerFraudScore = 5, // Very low - no history
+                Summary = "New customer with no claim history. Very low risk profile.",
                 Claims = [] // Clean customer with no claim history
             },
             
@@ -619,6 +634,7 @@ public class MockClaimsDataService
             {
                 CustomerId = "CUST-10001",
                 CustomerFraudScore = 65, // High - multiple fraud flags and frequent claims
+                Summary = "HIGH RISK: Frequent filer with 5 claims in 18 months, including 1 flagged for duplicate pattern. Notable pattern of bike theft claims. Recommend enhanced review.",
                 Claims =
                 [
                     new Claim
@@ -687,6 +703,7 @@ public class MockClaimsDataService
             {
                 CustomerId = "CUST-10002",
                 CustomerFraudScore = 20, // Low - clean record, few claims
+                Summary = "Low risk customer with 2 claims over 2+ years. Clean history, no fraud indicators.",
                 Claims =
                 [
                     new Claim
@@ -719,6 +736,7 @@ public class MockClaimsDataService
             {
                 CustomerId = "CUST-10003",
                 CustomerFraudScore = 10, // Very low - first claim scenario
+                Summary = "First-time claimant. No historical data for risk assessment. Standard review recommended.",
                 Claims =
                 [
                     new Claim

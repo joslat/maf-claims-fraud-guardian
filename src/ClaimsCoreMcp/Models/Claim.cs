@@ -33,6 +33,32 @@ public class ClaimHistoryResponse
     public List<string> ClaimHistorySummary => Claims
         .Select(c => $"{c.ReportedDate}: {c.SubType} - {c.Status.ToUpperInvariant()} - {c.PaidAmount.Currency} {c.PaidAmount.Amount}")
         .ToList();
+
+    // ===== Additional Workflow Compatibility Fields =====
+
+    /// <summary>
+    /// Alias for total_claims (workflow uses previous_claims_count).
+    /// </summary>
+    [JsonPropertyName("previous_claims_count")]
+    public int PreviousClaimsCount => TotalClaims;
+
+    /// <summary>
+    /// Alias for claim_history_summary (workflow uses claim_history).
+    /// </summary>
+    [JsonPropertyName("claim_history")]
+    public List<string> ClaimHistory => ClaimHistorySummary;
+
+    /// <summary>
+    /// Whether suspicious activity was detected (derived from fraud flags).
+    /// </summary>
+    [JsonPropertyName("suspicious_activity_detected")]
+    public bool SuspiciousActivityDetected => PreviousFraudFlags > 0;
+
+    /// <summary>
+    /// Summary of user history analysis.
+    /// </summary>
+    [JsonPropertyName("summary")]
+    public string Summary { get; set; } = string.Empty;
 }
 
 public class Claim
