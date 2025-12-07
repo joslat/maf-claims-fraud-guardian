@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Transaction-level fraud scoring from Demo12's TransactionFraudAgent.
@@ -25,3 +25,4 @@ public class TransactionFraudFinding
     [Description("Summary of transaction analysis")]
     public string Summary { get; set; } = string.Empty;
 }
+

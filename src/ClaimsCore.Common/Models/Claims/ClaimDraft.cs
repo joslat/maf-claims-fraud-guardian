@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Core claim data gathered during intake process.

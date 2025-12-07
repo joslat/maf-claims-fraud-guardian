@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Response containing customer claim history.

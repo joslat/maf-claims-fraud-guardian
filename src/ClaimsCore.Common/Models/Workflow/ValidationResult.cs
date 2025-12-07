@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Validation result from Demo11's ClaimsReadyForProcessingAgent.

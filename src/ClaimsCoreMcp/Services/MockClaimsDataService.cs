@@ -1,4 +1,4 @@
-using ClaimsCoreMcp.Models;
+using ClaimsCore.Common.Models;
 
 namespace ClaimsCoreMcp.Services;
 

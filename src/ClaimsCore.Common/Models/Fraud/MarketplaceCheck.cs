@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Response from online marketplace check for stolen items (OSINT).
@@ -31,3 +31,4 @@ public class MarketplaceCheckResponse
     [JsonPropertyName("fraud_indicator_score")]
     public int FraudIndicatorScore => FraudIndicator;
 }
+

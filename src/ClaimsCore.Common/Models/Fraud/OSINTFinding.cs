@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// OSINT (Open Source Intelligence) validation result from Demo12's OSINTAgent.
@@ -30,3 +30,4 @@ public class OSINTFinding
     [Description("Summary of OSINT findings")]
     public string Summary { get; set; } = string.Empty;
 }
+

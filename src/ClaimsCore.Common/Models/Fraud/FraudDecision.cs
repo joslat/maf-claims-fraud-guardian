@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Final fraud determination from Demo12's FraudDecisionAgent.
@@ -33,3 +33,4 @@ public class FraudDecision
     [Description("Key factors that influenced the decision")]
     public List<string> KeyFactors { get; set; } = [];
 }
+

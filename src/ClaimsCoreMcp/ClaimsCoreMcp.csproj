@@ -10,4 +10,8 @@
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.4.1-preview.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ClaimsCore.Common\ClaimsCore.Common.csproj" />
+  </ItemGroup>
+
 </Project>

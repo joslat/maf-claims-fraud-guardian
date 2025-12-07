@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Workflow state for Demo12 Fraud Detection.
@@ -34,3 +34,4 @@ public class FraudAnalysisState
     [JsonPropertyName("fraud_decision")]
     public FraudDecision? FraudDecision { get; set; }
 }
+

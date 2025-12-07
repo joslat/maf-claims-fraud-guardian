@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Decision output from Demo11's ClaimsUserFacingAgent (intake agent).
@@ -34,3 +34,4 @@ public class IntakeDecision
     [Description("Claim details extracted so far")]
     public ClaimDraft? ClaimDraft { get; set; }
 }
+

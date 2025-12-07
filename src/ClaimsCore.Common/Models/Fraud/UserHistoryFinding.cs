@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Customer history and fraud score analysis from Demo12's UserHistoryAgent.
@@ -29,3 +29,4 @@ public class UserHistoryFinding
     [Description("Summary of user history analysis")]
     public string Summary { get; set; } = string.Empty;
 }
+

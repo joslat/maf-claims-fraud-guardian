@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Final processed claim output from Demo11.
@@ -22,3 +22,4 @@ public class ProcessedClaim
     [JsonPropertyName("summary")]
     public string Summary { get; set; } = string.Empty;
 }
+

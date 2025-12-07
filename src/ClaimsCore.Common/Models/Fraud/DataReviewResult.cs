@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Initial data quality review result from Demo12's DataReviewAgent.
@@ -25,3 +25,4 @@ public class DataReviewResult
     [Description("Whether to proceed with fraud analysis")]
     public bool Proceed { get; set; }
 }
+

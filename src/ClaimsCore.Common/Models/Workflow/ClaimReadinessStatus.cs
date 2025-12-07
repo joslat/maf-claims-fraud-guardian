@@ -1,4 +1,4 @@
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Status enum for claim processing workflow.
@@ -10,3 +10,4 @@ public enum ClaimReadinessStatus
     Ready,
     NeedsMoreInfo
 }
+

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
-using ClaimsCoreMcp.Models;
+using ClaimsCore.Common.Models;
 using ClaimsCoreMcp.Services;
 using ModelContextProtocol.Server;
 

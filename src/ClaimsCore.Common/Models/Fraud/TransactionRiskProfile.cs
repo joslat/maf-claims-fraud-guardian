@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ClaimsCoreMcp.Models;
+namespace ClaimsCore.Common.Models;
 
 /// <summary>
 /// Transaction risk profile analysis for fraud detection.
@@ -39,3 +39,4 @@ public class TransactionRiskProfile
     [JsonPropertyName("transaction_fraud_score")]
     public int TransactionFraudScore => TransactionRiskScore;
 }
+
