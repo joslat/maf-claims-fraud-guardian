@@ -36,13 +36,13 @@ class Program
         {
             Console.WriteLine("\n" + new string('=', 60));
             Console.WriteLine("Available Demos:");
-            Console.WriteLine("  1 - Demo 11: Claims Intake Workflow (Integrated)");
-            Console.WriteLine("  2 - Demo 12: Fraud Detection Workflow (Integrated)");
-            Console.WriteLine("  3 - Demo 12: Fraud Detection with DevUI (Web Interface)");
-            Console.WriteLine("  4 - Sample: Agent Workflow Basic with DevUI");
-            Console.WriteLine("  5 - Sample: Agent Executors Workflow with DevUI");
-            Console.WriteLine("  6 - Sample: Function Executor Workflow with DevUI");
-            Console.WriteLine("  7 - Demo 12: Fraud Detection DevUI (New)");
+            Console.WriteLine("  1 - Demo 11: Claims Intake Workflow");
+            Console.WriteLine("  2 - Demo 12: Fraud Detection Workflow");
+            Console.WriteLine("  3 - Demo 12: Fraud Detection with DevUI");
+            Console.WriteLine("  4 - Sample: Agent Workflow with DevUI");
+            //Console.WriteLine("  5 - Sample: Agent Executors Workflow with DevUI");
+            //Console.WriteLine("  6 - Sample: Function Executor Workflow with DevUI");
+            //Console.WriteLine("  7 - Demo 12: Fraud Detection DevUI (New)");
             Console.WriteLine("  q - Quit");
             Console.WriteLine(new string('=', 60));
             Console.Write("\nSelect a demo (1-7, or q): ");
@@ -63,15 +63,15 @@ class Program
                 case "4":
                     await RunSampleAgentWorkflowBasic();
                     break;
-                case "5":
-                    await RunSampleAgentExecutorsWorkflow();
-                    break;
-                case "6":
-                    await RunSampleExecutorWorkflow();
-                    break;
-                case "7":
-                    await RunDemo12DevUI();
-                    break;
+                //case "5":
+                //    await RunSampleAgentExecutorsWorkflow();
+                //    break;
+                //case "6":
+                //    await RunSampleExecutorWorkflow();
+                //    break;
+                //case "7":
+                //    await RunDemo12DevUI();
+                //    break;
                 case "q":
                 case "quit":
                     exit = true;
