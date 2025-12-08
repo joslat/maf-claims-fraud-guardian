@@ -1,23 +1,16 @@
 // SPDX-License-Identifier: LicenseRef-MAFClaimsFraudGuardian-NPU-1.0-CH
 // Copyright (c) 2025 Jose Luis Latorre
 
-using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.AI.OpenAI;
 using ClaimsCore.Common.Models;
 using ClaimsCoreMcp.Tools;
 using MAFPlayground.Utils;
 using Microsoft.Agents.AI;
-using Microsoft.Agents.AI.DevUI;
-using Microsoft.Agents.AI.Hosting;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Agents.AI.Workflows.Reflection;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Hosting;
 
 namespace ClaimsCore.Workflows.ClaimsIntegrated;
 
