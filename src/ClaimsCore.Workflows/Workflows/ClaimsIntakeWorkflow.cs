@@ -12,28 +12,29 @@ using Microsoft.Agents.AI.Workflows;
 using Microsoft.Agents.AI.Workflows.Reflection;
 using Microsoft.Extensions.AI;
 
-namespace ClaimsCore.Workflows.ClaimsIntegrated;
+namespace ClaimsCore.Workflows.Workflows;
 
 /// <summary>
-/// Demo 11 Integrated: Claims Processing Workflow with ClaimsCore.Common Models
+/// Claims Intake Workflow: Interactive Claims Processing with ClaimsCore.Common Models
 /// 
-/// This is an integrated version of Demo11 that:
+/// This workflow provides an interactive claims intake experience that:
 /// - Uses ClaimsCore.Common data models (CustomerInfo, ClaimDraft, ValidationResult, etc.)
 /// - Calls ClaimsCoreMcp.Tools.ClaimsTools directly for data access
-/// - Maintains the same workflow structure as the original Demo11
+/// - Provides conversational claim gathering through AI agents
 /// 
 /// Demonstrates a three-agent claims workflow with:
 /// 1. ClaimsUserFacingAgent - Conversational intake to gather claim details
 /// 2. ClaimsReadyForProcessingAgent - Validation and enrichment
 /// 3. ClaimsProcessingAgent - Final processing and confirmation
 /// 
-/// Key Differences from Original Demo11:
-/// - Uses real ClaimsCore.Common models instead of SharedClaimsData
-/// - Calls ClaimsTools.GetCustomerProfile, GetContract, GetCurrentDate directly
-/// - Works with actual data from MockClaimsDataService
-/// - Compatible with ClaimsCoreMcp server architecture
+/// Key Features:
+/// - Real-time conversational intake with natural language understanding
+/// - Customer identification by ID or name lookup
+/// - Contract resolution and validation
+/// - Structured feedback loops for iterative refinement
+/// - Integration with MockClaimsDataService for data access
 /// </summary>
-internal static class Demo11_ClaimsWorkflow_Integrated
+internal static class ClaimsIntakeWorkflow
 {
     private const int MaxIntakeIterations = 15;
 
@@ -61,8 +62,8 @@ internal static class Demo11_ClaimsWorkflow_Integrated
         // Set console encoding to UTF-8 to support emojis and special characters
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        Console.WriteLine("=== Demo 11 Integrated: Claims Processing Workflow ===\n");
-        Console.WriteLine("This demo uses ClaimsCore.Common models and ClaimsCoreMcp tools.\n");
+        Console.WriteLine("=== Claims Intake Workflow ===\n");
+        Console.WriteLine("This workflow uses ClaimsCore.Common models and ClaimsCoreMcp tools.\n");
         Console.WriteLine("The workflow is fully self-contained with a UserInputExecutor for conversation.\n");
         Console.WriteLine("Type 'quit' to exit at any time.\n");
 
@@ -74,11 +75,11 @@ internal static class Demo11_ClaimsWorkflow_Integrated
         // Build workflow
         var workflow = BuildClaimsWorkflow(chatClient);
 
-        WorkflowVisualizerTool.PrintAll(workflow, "Demo 11 Integrated: Claims Processing Workflow");
+        WorkflowVisualizerTool.PrintAll(workflow, "Claims Intake Workflow");
 
         // Execute workflow
         Console.WriteLine("\n" + new string('=', 80));
-        Console.WriteLine("CLAIMS INTAKE - Interactive Workflow (Integrated Version)");
+        Console.WriteLine("CLAIMS INTAKE - Interactive Workflow");
         Console.WriteLine(new string('=', 80) + "\n");
         Console.WriteLine("?? The workflow will prompt you for information as needed.");
         Console.WriteLine("   Simply respond to the agent's questions.\n");
@@ -117,7 +118,7 @@ internal static class Demo11_ClaimsWorkflow_Integrated
             if (shouldExit) break;
         }
 
-        Console.WriteLine("\n? Demo 11 Integrated Complete!\n");
+        Console.WriteLine("\n? Claims Intake Workflow Complete!\n");
         Console.WriteLine("Key Concepts Demonstrated:");
         Console.WriteLine("  ? Integration with ClaimsCore.Common models");
         Console.WriteLine("  ? Direct calls to ClaimsCoreMcp tools");
@@ -340,7 +341,7 @@ internal static class Demo11_ClaimsWorkflow_Integrated
             IWorkflowContext context,
             CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("?? Welcome to Claims Intake (Integrated Version)!");
+            Console.WriteLine("?? Welcome to Claims Intake!");
             Console.WriteLine("Please describe your situation, and I'll help you file a claim.\n");
             return PromptUserAsync();
         }

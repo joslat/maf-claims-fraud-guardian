@@ -1,23 +1,23 @@
-# Claims Integrated - Demos with ClaimsCore.Common Models and ClaimsCoreMcp Tools
+# Production Workflows - ClaimsCore.Common Models and ClaimsCoreMcp Tools
 
-This folder contains integrated versions of the Claims demos that use:
+This folder contains production-ready workflows that use:
 - **ClaimsCore.Common** data models (CustomerInfo, ClaimDraft, ValidationResult, FraudAnalysisState, etc.)
 - **ClaimsCoreMcp.Tools.ClaimsTools** for data access (GetCustomerProfile, GetContract, CheckOnlineMarketplaces, etc.)
 
 ## Overview
 
-This folder contains two integrated demos:
+This folder contains two production workflows:
 
-1. **Demo11_ClaimsWorkflow_Integrated.cs** - Claims intake workflow
-2. **Demo12_ClaimsFraudDetection_Integrated.cs** - Fraud detection workflow
+1. **ClaimsIntakeWorkflow.cs** - Claims intake workflow
+2. **ClaimsFraudDetectionWorkflow.cs** - Fraud detection workflow
 
-Both maintain the same workflow structure as their originals while integrating with ClaimsCoreMcp server architecture.
+Both maintain robust workflow structures while integrating with ClaimsCoreMcp server architecture.
 
 ### Key Differences from Original Demos
 
-| Aspect | Original Demos | Integrated Demos |
-|--------|----------------|------------------|
-| **Namespace** | `ClaimsCore.Workflows.ClaimsDemo` | `ClaimsCore.Workflows.ClaimsIntegrated` |
+| Aspect | Original Demos | Production Workflows |
+|--------|----------------|----------------------|
+| **Namespace** | `ClaimsCore.Workflows.ClaimsDemo` | `ClaimsCore.Workflows.Workflows` |
 | **Data Models** | `SharedClaimsData.cs` (local) | `ClaimsCore.Common.Models` (shared) |
 | **Tools** | `ClaimsMockTools` (local) | `ClaimsCoreMcp.Tools.ClaimsTools` (shared) |
 | **Data Source** | Hardcoded mock data | `MockClaimsDataService` (via ClaimsTools) |
@@ -25,7 +25,7 @@ Both maintain the same workflow structure as their originals while integrating w
 
 ## Demos
 
-### Demo11: Claims Intake Workflow (Integrated)
+### ClaimsIntakeWorkflow: Claims Intake
 
 Conversational claims intake workflow that:
 - Prompts users for claim information interactively
@@ -38,7 +38,7 @@ Conversational claims intake workflow that:
 - `ValidationResult` - Validation agent output
 - `ClaimWorkflowState` - Workflow state tracking
 
-### Demo12: Fraud Detection Workflow (Integrated)
+### ClaimsFraudDetectionWorkflow: Fraud Detection
 
 Multi-agent fraud detection pipeline that:
 - Performs data quality review
@@ -56,7 +56,7 @@ Multi-agent fraud detection pipeline that:
 ## Architecture
 
 ```
-ClaimsCore.Workflows.ClaimsIntegrated
+ClaimsCore.Workflows.Workflows
 ?
 ??? Uses Models from: ClaimsCore.Common
 ?   ??? CustomerInfo, ClaimDraft, ValidationResult
@@ -153,13 +153,13 @@ ClaimsCore.Workflows.ClaimsIntegrated
 ### Execution
 
 ```csharp
-using ClaimsCore.Workflows.ClaimsIntegrated;
+using ClaimsCore.Workflows.Workflows;
 
-// Run Demo 11 Integrated
-await Demo11_ClaimsWorkflow_Integrated.Execute();
+// Run Claims Intake Workflow
+await ClaimsIntakeWorkflow.Execute();
 
-// Run Demo 12 Integrated
-await Demo12_ClaimsFraudDetection_Integrated.Execute();
+// Run Fraud Detection Workflow
+await ClaimsFraudDetectionWorkflow.Execute();
 ```
 
 Or use the main application menu:
@@ -168,8 +168,8 @@ cd src/ClaimsCore.Workflows
 dotnet run
 
 # Select:
-# 2 - Demo 11 Integrated
-# 4 - Demo 12 Integrated
+# 1 - Claims Intake Workflow
+# 2 - Fraud Detection Workflow
 ```
 
 ### Test Customers
@@ -194,12 +194,12 @@ The integrated demo has access to 6 test customers via `MockClaimsDataService`:
 
 ### Example Sessions
 
-#### Demo11 Integrated - Claims Intake
+#### ClaimsIntakeWorkflow - Claims Intake
 
 ```
-=== Demo 11 Integrated: Claims Processing Workflow ===
+=== Claims Intake Workflow ===
 
-?? Welcome to Claims Intake (Integrated Version)!
+?? Welcome to Claims Intake!
 Please describe your situation, and I'll help you file a claim.
 
 You: My bike was stolen today
@@ -213,12 +213,12 @@ You: Trek X-Caliber 8, red mountain bike
 ? CLAIM PROCESSED SUCCESSFULLY
 ```
 
-#### Demo12 Integrated - Fraud Detection
+#### ClaimsFraudDetectionWorkflow - Fraud Detection
 
 ```
-=== Demo 12 Integrated: Claims Fraud Detection Workflow ===
+=== Claims Fraud Detection Workflow ===
 
-FRAUD DETECTION ANALYSIS (Integrated Version)
+FRAUD DETECTION ANALYSIS
 ================================================================================
 
 Analyzing claim:
@@ -268,7 +268,7 @@ Recommendation: INVESTIGATE
 
 ### Tool Registration
 
-#### Demo11 Tools
+#### ClaimsIntakeWorkflow Tools
 
 Tools are registered as lambdas that call ClaimsTools directly:
 
@@ -294,7 +294,7 @@ var tools = new List<AITool>
 };
 ```
 
-#### Demo12 Tools
+#### ClaimsFraudDetectionWorkflow Tools
 
 Fraud detection tools registered similarly:
 
@@ -323,9 +323,9 @@ var tools = new List<AITool>
 
 ### State Management
 
-Both integrated demos use simplified state models from `ClaimsCore.Common`:
+Both workflows use simplified state models from `ClaimsCore.Common`:
 
-#### Demo11 State
+#### ClaimsIntakeWorkflow State
 
 ```csharp
 public class ClaimWorkflowState
@@ -338,7 +338,7 @@ public class ClaimWorkflowState
 }
 ```
 
-#### Demo12 State
+#### ClaimsFraudDetectionWorkflow State
 
 ```csharp
 public class FraudAnalysisState
@@ -397,8 +397,8 @@ await mcpClient.CallToolAsync("check_online_marketplaces", new {
 
 ## See Also
 
-- [Original Demo11](../ClaimsDemo/Demo11_ClaimsWorkflow.cs) - Original claims intake implementation
-- [Original Demo12](../ClaimsDemo/Demo12_ClaimsFraudDetection.cs) - Original fraud detection implementation
+- [Original Demo11](../ClaimsDemo/Demo11_ClaimsWorkflow.cs) - Original claims intake implementation (deprecated)
+- [Original Demo12](../ClaimsDemo/Demo12_ClaimsFraudDetection.cs) - Original fraud detection implementation (deprecated)
 - [ClaimsCoreMcp README](../../ClaimsCoreMcp/README.md) - MCP server documentation
 - [ClaimsCore.Common Models](../../ClaimsCore.Common/Models/) - Shared data models
 
@@ -406,10 +406,10 @@ await mcpClient.CallToolAsync("check_online_marketplaces", new {
 
 ? **Integrated with ClaimsCore.Common models**  
 ? **Uses ClaimsCoreMcp tools for data access**  
-? **Demo11: Claims intake workflow**  
-? **Demo12: Fraud detection workflow**  
-? **Maintains same workflow structures as originals**  
+? **ClaimsIntakeWorkflow: Claims intake workflow**  
+? **ClaimsFraudDetectionWorkflow: Fraud detection workflow**  
+? **Maintains robust workflow structures**  
 ? **Ready for future MCP server integration**  
 ? **Simplified state management**  
 
-These integrated versions demonstrate how to build workflows that leverage shared models and tools, providing a foundation for scalable, maintainable claims processing and fraud detection systems.
+These production workflows demonstrate how to build workflows that leverage shared models and tools, providing a foundation for scalable, maintainable claims processing and fraud detection systems.

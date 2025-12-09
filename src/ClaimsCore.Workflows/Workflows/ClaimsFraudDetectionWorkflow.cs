@@ -19,18 +19,15 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace ClaimsCore.Workflows.DevUI;
+namespace ClaimsCore.Workflows.Workflows;
 
 /// <summary>
-/// Demo 12 DevUI: Claims Fraud Detection Workflow with ClaimsCore.Common Models
+/// Claims Fraud Detection Workflow: Multi-Agent Parallel Fraud Analysis
 /// 
-/// This is a DevUI version of Demo12 that:
+/// This workflow implements a comprehensive fraud detection pipeline that:
 /// - Uses ClaimsCore.Common data models (FraudAnalysisState, OSINTFinding, etc.)
 /// - Calls ClaimsCoreMcp.Tools.ClaimsTools directly for data access
-/// - Maintains the same workflow structure as the original Demo12
-/// 
-/// Implements a comprehensive fraud detection pipeline that analyzes validated
-/// claims through multiple AI agents working in parallel to detect potential fraud indicators.
+/// - Analyzes validated claims through multiple AI agents working in parallel
 /// 
 /// Key Architecture Features:
 /// - Fan-out/fan-in pattern for parallel fraud analysis
@@ -38,7 +35,7 @@ namespace ClaimsCore.Workflows.DevUI;
 /// - Data passed through messages (NOT context state in fan-out executors)
 /// - Context state operations only in aggregator and non-fan-out executors
 /// 
-/// Takes a validated claim (ValidationResult from Demo11) and processes it through:
+/// Workflow Stages:
 /// 1. DataReviewExecutor - Initial data quality and completeness check
 /// 2. ClassificationRouter - Routes to appropriate claim type handler
 /// 3. PropertyTheftFanOut - Sends claim to 3 parallel fraud detection agents
@@ -46,13 +43,12 @@ namespace ClaimsCore.Workflows.DevUI;
 /// 5. FraudDecisionAgent - Analyzes aggregated data and makes final determination
 /// 6. OutcomePresenterAgent - Generates professional email to case handler
 /// 
-/// Key Differences from Original Demo12:
-/// - Uses real ClaimsCore.Common models instead of SharedClaimsData
-/// - Calls ClaimsTools methods directly (CheckOnlineMarketplaces, GetClaimHistory, etc.)
-/// - Works with actual data from MockClaimsDataService
-/// - Compatible with ClaimsCoreMcp server architecture
+/// Parallel Analysis Agents:
+/// - OSINT Agent: Checks online marketplaces for stolen items
+/// - User History Agent: Analyzes customer claim history and fraud patterns
+/// - Transaction Fraud Agent: Scores transaction-level fraud indicators
 /// </summary>
-internal static class Demo12_ClaimsFraudDetection_DevUI
+internal static class ClaimsFraudDetectionWorkflow
 {
     // --------------------- Shared state ---------------------
     // Using FraudAnalysisState from ClaimsCore.Common.Models
@@ -78,8 +74,8 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
         // Set console encoding to UTF-8 to support emojis and special characters
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        Console.WriteLine("=== Demo 12 Integrated: Claims Fraud Detection Workflow ===\n");
-        Console.WriteLine("This demo uses ClaimsCore.Common models and ClaimsCoreMcp tools.\n");
+        Console.WriteLine("=== Claims Fraud Detection Workflow ===\n");
+        Console.WriteLine("This workflow uses ClaimsCore.Common models and ClaimsCoreMcp tools.\n");
         Console.WriteLine("Features: Polymorphic aggregator, data passing via messages, state in aggregator\n");
 
         // Azure OpenAI setup
@@ -90,13 +86,13 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
         // Build workflow
         var workflow = BuildFraudDetectionWorkflow(chatClient);
 
-        WorkflowVisualizerTool.PrintAll(workflow, "Demo 12 Integrated: Claims Fraud Detection Workflow");
+        WorkflowVisualizerTool.PrintAll(workflow, "Claims Fraud Detection Workflow");
 
         // Get mock claim based on scenario
         var mockClaim = GetMockClaim(scenario);
 
         Console.WriteLine("\n" + new string('=', 80));
-        Console.WriteLine("FRAUD DETECTION ANALYSIS (Integrated Version)");
+        Console.WriteLine("FRAUD DETECTION ANALYSIS");
         Console.WriteLine(new string('=', 80) + "\n");
         Console.WriteLine($"Scenario: {GetScenarioName(scenario)}");
         Console.WriteLine("Analyzing claim:");
@@ -133,7 +129,7 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
             }
         }
 
-        Console.WriteLine("\n✅ Demo 12 Integrated Complete!\n");
+        Console.WriteLine("\n✅ Claims Fraud Detection Workflow Complete!\n");
         Console.WriteLine("Key Concepts Demonstrated:");
         Console.WriteLine("  ✓ Integration with ClaimsCore.Common models");
         Console.WriteLine("  ✓ Direct calls to ClaimsCoreMcp tools");
@@ -160,7 +156,7 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
         // Set console encoding to UTF-8 to support emojis and special characters
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        Console.WriteLine("=== Demo 12 Integrated: Fraud Detection with DevUI ===\n");
+        Console.WriteLine("=== Claims Fraud Detection Workflow with DevUI ===\n");
         Console.WriteLine($"📋 Default scenario: {GetScenarioName(scenario)}\n");
         Console.WriteLine("Setting up web server with DevUI for workflow visualization...\n");
 
@@ -582,43 +578,33 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
 
     /// <summary>
     /// FailsafeInputExecutor - Provides default input if none is supplied (for DevUI).
-    /// Handles List<ChatMessage> and TurnToken from DevUI and converts to ValidationResult.
+    /// Handles ChatMessage input from DevUI and converts it to ValidationResult.
     /// Supports:
     /// - Empty message content -> uses default scenario
     /// - Number (1-3) -> selects specific scenario
     /// - JSON -> parses as ValidationResult object
     /// </summary>
-    private sealed class FailsafeInputExecutor : Executor, IResettableExecutor
+    private sealed class FailsafeInputExecutor :
+        ReflectingExecutor<FailsafeInputExecutor>,
+        IMessageHandler<ChatMessage, ValidationResult>
     {
         private readonly int _defaultScenario;
-        private List<ChatMessage> _pendingMessages = [];
 
-        public FailsafeInputExecutor(int defaultScenario = 1) : base("FailsafeInput", declareCrossRunShareable: true)
+        public FailsafeInputExecutor(int defaultScenario = 1) : base("FailsafeInput")
         {
             _defaultScenario = defaultScenario;
         }
 
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
-        {
-            return routeBuilder
-                .AddHandler<List<ChatMessage>>(HandleMessagesAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate messages from DevUI
-        private ValueTask HandleMessagesAsync(List<ChatMessage> messages, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingMessages.AddRange(messages);
-            return default;
-        }
-
-        // Process when TurnToken arrives
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
+        // Handle workflow entry from DevUI - expects ChatMessage input, returns ValidationResult
+        public async ValueTask<ValidationResult> HandleAsync(
+            ChatMessage message,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
             Console.WriteLine($"📌 FailsafeInput: Processing workflow entry from DevUI");
             
-            // Extract text from first message (if any)
-            var input = _pendingMessages.FirstOrDefault()?.Text ?? string.Empty;
+            // Extract text content from ChatMessage
+            var input = message.Text ?? string.Empty;
             Console.WriteLine($"   Message content: '{(string.IsNullOrWhiteSpace(input) ? "(empty)" : input)}'");
             
             ValidationResult claimToProcess;
@@ -668,58 +654,23 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
                 claimToProcess = GetMockClaim(_defaultScenario);
             }
             
-            // Clear pending messages
-            _pendingMessages = [];
-            
-            // Send ValidationResult to next executor
-            await context.SendMessageAsync(claimToProcess, cancellationToken: ct);
-            
-            // Forward TurnToken to trigger next executor
-            await context.SendMessageAsync(token, cancellationToken: ct);
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingMessages = [];
-            return default;
+            // Return the ValidationResult to be passed to the next executor
+            return claimToProcess;
         }
     }
 
-    private sealed class DataReviewExecutor : Executor, IResettableExecutor
+    private sealed class DataReviewExecutor :
+        ReflectingExecutor<DataReviewExecutor>,
+        IMessageHandler<ValidationResult, DataReviewResult>
     {
         private readonly AIAgent _agent;
-        private ValidationResult? _pendingClaim;
+        public DataReviewExecutor(AIAgent agent) : base("DataReview") => _agent = agent;
 
-        public DataReviewExecutor(AIAgent agent) : base("DataReview", declareCrossRunShareable: true) 
+        public async ValueTask<DataReviewResult> HandleAsync(
+            ValidationResult claim,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
-            _agent = agent;
-        }
-
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
-        {
-            return routeBuilder
-                .AddHandler<ValidationResult>(HandleClaimAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate ValidationResult
-        private ValueTask HandleClaimAsync(ValidationResult claim, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingClaim = claim;
-            return default;
-        }
-
-        // Process when TurnToken arrives
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
-        {
-            if (_pendingClaim == null)
-            {
-                throw new InvalidOperationException("No claim to review");
-            }
-
-            var claim = _pendingClaim;
-            _pendingClaim = null;
-
             var state = await ReadFraudStateAsync(context);
             state.OriginalClaim = claim;
             
@@ -740,7 +691,7 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
                 Detailed Description: {claim.DetailedDescription}
                 """;
 
-            var response = await _agent.RunAsync(prompt, cancellationToken: ct);
+            var response = await _agent.RunAsync(prompt, cancellationToken: cancellationToken);
             var result = response.Deserialize<DataReviewResult>(JsonSerializerOptions.Web);
 
             state.DataReview = result;
@@ -749,51 +700,21 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
             Console.WriteLine($"Quality Score: {result.QualityScore}/100");
             Console.WriteLine($"Proceed: {result.Proceed}\n");
 
-            // Send result to next executor
-            await context.SendMessageAsync(result, cancellationToken: ct);
-            
-            // Forward TurnToken
-            await context.SendMessageAsync(token, cancellationToken: ct);
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingClaim = null;
-            return default;
+            return result;
         }
     }
 
-    private sealed class ClassificationRouterExecutor : Executor, IResettableExecutor
+    private sealed class ClassificationRouterExecutor :
+        ReflectingExecutor<ClassificationRouterExecutor>,
+        IMessageHandler<DataReviewResult, string>
     {
-        private DataReviewResult? _pendingReview;
+        public ClassificationRouterExecutor() : base("ClassificationRouter") { }
 
-        public ClassificationRouterExecutor() : base("ClassificationRouter", declareCrossRunShareable: true) { }
-
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
+        public async ValueTask<string> HandleAsync(
+            DataReviewResult review,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
-            return routeBuilder
-                .AddHandler<DataReviewResult>(HandleReviewAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate DataReviewResult
-        private ValueTask HandleReviewAsync(DataReviewResult review, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingReview = review;
-            return default;
-        }
-
-        // Process when TurnToken arrives
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
-        {
-            if (_pendingReview == null)
-            {
-                throw new InvalidOperationException("No review result to route");
-            }
-
-            var review = _pendingReview;
-            _pendingReview = null;
-
             var state = await ReadFraudStateAsync(context);
             var claim = state.OriginalClaim!;
             
@@ -807,42 +728,20 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
             state.ClaimSubType = claim.NormalizedClaimSubType ?? "";
             await SaveFraudStateAsync(context, state);
 
-            // Send route type to next executor
-            await context.SendMessageAsync("PropertyTheft", cancellationToken: ct);
-            
-            // Forward TurnToken
-            await context.SendMessageAsync(token, cancellationToken: ct);
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingReview = null;
-            return default;
+            return "PropertyTheft";
         }
     }
 
-    private sealed class PropertyTheftFanOutExecutor : Executor, IResettableExecutor
+    private sealed class PropertyTheftFanOutExecutor :
+        ReflectingExecutor<PropertyTheftFanOutExecutor>,
+        IMessageHandler<string>
     {
-        private string? _pendingRouteType;
+        public PropertyTheftFanOutExecutor() : base("PropertyTheftFanOut") { }
 
-        public PropertyTheftFanOutExecutor() : base("PropertyTheftFanOut", declareCrossRunShareable: true) { }
-
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
-        {
-            return routeBuilder
-                .AddHandler<string>(HandleRouteTypeAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate route type
-        private ValueTask HandleRouteTypeAsync(string routeType, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingRouteType = routeType;
-            return default;
-        }
-
-        // Process when TurnToken arrives
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
+        public async ValueTask HandleAsync(
+            string routeType,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
             Console.WriteLine("\n=== Parallel Fraud Detection (Fan-Out) ===");
             Console.WriteLine("Dispatching to 3 fraud detection agents...\n");
@@ -851,57 +750,23 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
             var state = await ReadFraudStateAsync(context);
             var claim = state.OriginalClaim!;
             
-            _pendingRouteType = null;
-            
             // Send the CLAIM to all executors
-            await context.SendMessageAsync(claim, cancellationToken: ct);
-            
-            // Forward TurnToken to trigger parallel executors
-            await context.SendMessageAsync(token, cancellationToken: ct);
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingRouteType = null;
-            return default;
+            await context.SendMessageAsync(claim, cancellationToken: cancellationToken);
         }
     }
 
-    private sealed class OSINTExecutor : Executor, IResettableExecutor
+    private sealed class OSINTExecutor :
+        ReflectingExecutor<OSINTExecutor>,
+        IMessageHandler<ValidationResult, OSINTFinding>
     {
         private readonly AIAgent _agent;
-        private ValidationResult? _pendingClaim;
+        public OSINTExecutor(AIAgent agent) : base("OSINT") => _agent = agent;
 
-        public OSINTExecutor(AIAgent agent) : base("OSINT", declareCrossRunShareable: true)
+        public async ValueTask<OSINTFinding> HandleAsync(
+            ValidationResult claim,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
-            _agent = agent;
-        }
-
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
-        {
-            return routeBuilder
-                .AddHandler<ValidationResult>(HandleClaimAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate claim
-        private ValueTask HandleClaimAsync(ValidationResult claim, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingClaim = claim;
-            return default;
-        }
-
-        // Process when TurnToken arrives
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
-        {
-            if (_pendingClaim == null)
-            {
-                throw new InvalidOperationException("No claim to analyze");
-            }
-
-            var claim = _pendingClaim;
-            _pendingClaim = null;
-
             Console.WriteLine("=== OSINT Validation (Online Marketplaces) ===\n");
 
             var prompt = $"""
@@ -915,7 +780,7 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
                 Use check_online_marketplaces tool to search.
                 """;
 
-            var response = await _agent.RunAsync(prompt, cancellationToken: ct);
+            var response = await _agent.RunAsync(prompt, cancellationToken: cancellationToken);
             var finding = response.Deserialize<OSINTFinding>(JsonSerializerOptions.Web);
 
             Console.ForegroundColor = finding.FraudIndicatorScore > 70 ? ConsoleColor.Red : 
@@ -935,55 +800,22 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
             Console.WriteLine($"  Summary: {finding.Summary}");
             Console.WriteLine();
             
-            // Send finding to aggregator
-            await context.SendMessageAsync(finding, cancellationToken: ct);
-            
-            // Forward TurnToken
-            await context.SendMessageAsync(token, cancellationToken: ct);
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingClaim = null;
-            return default;
+            return finding;
         }
     }
 
-    private sealed class UserHistoryExecutor : Executor, IResettableExecutor
+    private sealed class UserHistoryExecutor :
+        ReflectingExecutor<UserHistoryExecutor>,
+        IMessageHandler<ValidationResult, UserHistoryFinding>
     {
         private readonly AIAgent _agent;
-        private ValidationResult? _pendingClaim;
+        public UserHistoryExecutor(AIAgent agent) : base("UserHistory") => _agent = agent;
 
-        public UserHistoryExecutor(AIAgent agent) : base("UserHistory", declareCrossRunShareable: true)
+        public async ValueTask<UserHistoryFinding> HandleAsync(
+            ValidationResult claim,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
-            _agent = agent;
-        }
-
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
-        {
-            return routeBuilder
-                .AddHandler<ValidationResult>(HandleClaimAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate claim
-        private ValueTask HandleClaimAsync(ValidationResult claim, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingClaim = claim;
-            return default;
-        }
-
-        // Process when TurnToken arrives
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
-        {
-            if (_pendingClaim == null)
-            {
-                throw new InvalidOperationException("No claim to analyze");
-            }
-
-            var claim = _pendingClaim;
-            _pendingClaim = null;
-
             Console.WriteLine("=== User History Analysis ===\n");
 
             var prompt = $"""
@@ -995,7 +827,7 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
                 Use get_customer_claim_history tool to retrieve past claims.
                 """;
 
-            var response = await _agent.RunAsync(prompt, cancellationToken: ct);
+            var response = await _agent.RunAsync(prompt, cancellationToken: cancellationToken);
             var finding = response.Deserialize<UserHistoryFinding>(JsonSerializerOptions.Web);
 
             Console.ForegroundColor = finding.CustomerFraudScore > 60 ? ConsoleColor.Red : 
@@ -1015,55 +847,22 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
             Console.WriteLine($"  Summary: {finding.Summary}");
             Console.WriteLine();
             
-            // Send finding to aggregator
-            await context.SendMessageAsync(finding, cancellationToken: ct);
-            
-            // Forward TurnToken
-            await context.SendMessageAsync(token, cancellationToken: ct);
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingClaim = null;
-            return default;
+            return finding;
         }
     }
 
-    private sealed class TransactionFraudExecutor : Executor, IResettableExecutor
+    private sealed class TransactionFraudExecutor :
+        ReflectingExecutor<TransactionFraudExecutor>,
+        IMessageHandler<ValidationResult, TransactionFraudFinding>
     {
         private readonly AIAgent _agent;
-        private ValidationResult? _pendingClaim;
+        public TransactionFraudExecutor(AIAgent agent) : base("TransactionFraud") => _agent = agent;
 
-        public TransactionFraudExecutor(AIAgent agent) : base("TransactionFraud", declareCrossRunShareable: true)
+        public async ValueTask<TransactionFraudFinding> HandleAsync(
+            ValidationResult claim,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
-            _agent = agent;
-        }
-
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
-        {
-            return routeBuilder
-                .AddHandler<ValidationResult>(HandleClaimAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate claim
-        private ValueTask HandleClaimAsync(ValidationResult claim, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingClaim = claim;
-            return default;
-        }
-
-        // Process when TurnToken arrives
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
-        {
-            if (_pendingClaim == null)
-            {
-                throw new InvalidOperationException("No claim to analyze");
-            }
-
-            var claim = _pendingClaim;
-            _pendingClaim = null;
-
             Console.WriteLine("=== Transaction Fraud Scoring ===\n");
 
             var prompt = $"""
@@ -1076,7 +875,7 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
                 Use get_transaction_risk_profile tool for context.
                 """;
 
-            var response = await _agent.RunAsync(prompt, cancellationToken: ct);
+            var response = await _agent.RunAsync(prompt, cancellationToken: cancellationToken);
             var finding = response.Deserialize<TransactionFraudFinding>(JsonSerializerOptions.Web);
 
             Console.ForegroundColor = finding.TransactionFraudScore > 60 ? ConsoleColor.Red : 
@@ -1099,149 +898,103 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
             Console.WriteLine($"  Summary: {finding.Summary}");
             Console.WriteLine();
             
-            // Send finding to aggregator
-            await context.SendMessageAsync(finding, cancellationToken: ct);
-            
-            // Forward TurnToken
-            await context.SendMessageAsync(token, cancellationToken: ct);
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingClaim = null;
-            return default;
+            return finding;
         }
     }
 
-    private sealed class FraudAggregatorExecutor : Executor, IResettableExecutor
+    private sealed class FraudAggregatorExecutor :
+        ReflectingExecutor<FraudAggregatorExecutor>,
+        IMessageHandler<OSINTFinding, string>,
+        IMessageHandler<UserHistoryFinding, string>,
+        IMessageHandler<TransactionFraudFinding, string>
     {
         private OSINTFinding? _osintFinding;
         private UserHistoryFinding? _userHistoryFinding;
         private TransactionFraudFinding? _transactionFinding;
-        private TurnToken? _pendingToken;
         private int _receivedCount = 0;
         private const int ExpectedCount = 3;
 
-        public FraudAggregatorExecutor() : base("FraudAggregator", declareCrossRunShareable: true) { }
+        public FraudAggregatorExecutor() : base("FraudAggregator") { }
 
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
+        public ValueTask<string> HandleAsync(
+            OSINTFinding finding, 
+            IWorkflowContext context, 
+            CancellationToken cancellationToken = default)
         {
-            return routeBuilder
-                .AddHandler<OSINTFinding>(HandleOSINTAsync)
-                .AddHandler<UserHistoryFinding>(HandleUserHistoryAsync)
-                .AddHandler<TransactionFraudFinding>(HandleTransactionAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
+            return HandleFindingAsync("OSINT", finding, context, cancellationToken, 
+                () => { _osintFinding = finding; });
         }
 
-        // Accumulate OSINT finding
-        private ValueTask HandleOSINTAsync(OSINTFinding finding, IWorkflowContext context, CancellationToken ct)
+        public ValueTask<string> HandleAsync(
+            UserHistoryFinding finding, 
+            IWorkflowContext context, 
+            CancellationToken cancellationToken = default)
         {
-            Console.WriteLine($"[Aggregator] ✓ Received finding from OSINT ({_receivedCount + 1}/{ExpectedCount})");
-            _osintFinding = finding;
+            return HandleFindingAsync("UserHistory", finding, context, cancellationToken, 
+                () => { _userHistoryFinding = finding; });
+        }
+
+        public ValueTask<string> HandleAsync(
+            TransactionFraudFinding finding, 
+            IWorkflowContext context, 
+            CancellationToken cancellationToken = default)
+        {
+            return HandleFindingAsync("Transaction", finding, context, cancellationToken, 
+                () => { _transactionFinding = finding; });
+        }
+
+        private async ValueTask<string> HandleFindingAsync<T>(
+            string sourceName,
+            T finding,
+            IWorkflowContext context,
+            CancellationToken cancellationToken,
+            Action storeFinding)
+        {
+            Console.WriteLine($"[Aggregator] ✓ Received finding from {sourceName} ({_receivedCount + 1}/{ExpectedCount})");
+            
+            storeFinding();
             _receivedCount++;
-            return default;
-        }
 
-        // Accumulate UserHistory finding
-        private ValueTask HandleUserHistoryAsync(UserHistoryFinding finding, IWorkflowContext context, CancellationToken ct)
-        {
-            Console.WriteLine($"[Aggregator] ✓ Received finding from UserHistory ({_receivedCount + 1}/{ExpectedCount})");
-            _userHistoryFinding = finding;
-            _receivedCount++;
-            return default;
-        }
-
-        // Accumulate Transaction finding
-        private ValueTask HandleTransactionAsync(TransactionFraudFinding finding, IWorkflowContext context, CancellationToken ct)
-        {
-            Console.WriteLine($"[Aggregator] ✓ Received finding from Transaction ({_receivedCount + 1}/{ExpectedCount})");
-            _transactionFinding = finding;
-            _receivedCount++;
-            return default;
-        }
-
-        // Process when TurnToken arrives (after all 3 findings are received)
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
-        {
-            // Store first token, ignore subsequent ones from parallel executors
-            if (_pendingToken == null)
+            if (_receivedCount >= ExpectedCount)
             {
-                _pendingToken = token;
+                Console.WriteLine("\n=== All Fraud Findings Collected (Fan-In) ===\n");
+                
+                var state = await ReadFraudStateAsync(context);
+                state.OSINTFinding = _osintFinding;
+                state.UserHistoryFinding = _userHistoryFinding;
+                state.TransactionFraudFinding = _transactionFinding;
+                await SaveFraudStateAsync(context, state);
+                
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("✅ All findings stored in shared state!");
+                Console.ResetColor();
+                Console.WriteLine();
+                
+                // Reset for potential re-runs
+                _osintFinding = null;
+                _userHistoryFinding = null;
+                _transactionFinding = null;
+                _receivedCount = 0;
+                
+                return "[Fraud Analysis Complete] All findings collected and stored";
             }
 
-            // Wait until all 3 findings are received
-            if (_receivedCount < ExpectedCount)
-            {
-                return;
-            }
-
-            Console.WriteLine("\n=== All Fraud Findings Collected (Fan-In) ===\n");
-            
-            var state = await ReadFraudStateAsync(context);
-            state.OSINTFinding = _osintFinding;
-            state.UserHistoryFinding = _userHistoryFinding;
-            state.TransactionFraudFinding = _transactionFinding;
-            await SaveFraudStateAsync(context, state);
-            
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("✅ All findings stored in shared state!");
-            Console.ResetColor();
-            Console.WriteLine();
-            
-            // Reset for potential re-runs
-            _osintFinding = null;
-            _userHistoryFinding = null;
-            _transactionFinding = null;
-            _receivedCount = 0;
-            
-            // Send completion message to next executor
-            await context.SendMessageAsync("[Fraud Analysis Complete] All findings collected and stored", cancellationToken: ct);
-            
-            // Forward TurnToken (use the stored one)
-            await context.SendMessageAsync(_pendingToken!, cancellationToken: ct);
-            _pendingToken = null;
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _osintFinding = null;
-            _userHistoryFinding = null;
-            _transactionFinding = null;
-            _pendingToken = null;
-            _receivedCount = 0;
-            return default;
+            return null!;
         }
     }
 
-    private sealed class FraudDecisionExecutor : Executor, IResettableExecutor
+    private sealed class FraudDecisionExecutor :
+        ReflectingExecutor<FraudDecisionExecutor>,
+        IMessageHandler<string, FraudDecision>
     {
         private readonly AIAgent _agent;
-        private string? _pendingMessage;
+        public FraudDecisionExecutor(AIAgent agent) : base("FraudDecision") => _agent = agent;
 
-        public FraudDecisionExecutor(AIAgent agent) : base("FraudDecision", declareCrossRunShareable: true)
+        public async ValueTask<FraudDecision> HandleAsync(
+            string _,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
-            _agent = agent;
-        }
-
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
-        {
-            return routeBuilder
-                .AddHandler<string>(HandleMessageAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate message
-        private ValueTask HandleMessageAsync(string message, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingMessage = message;
-            return default;
-        }
-
-        // Process when TurnToken arrives
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingMessage = null;
-
             var state = await ReadFraudStateAsync(context);
             
             Console.WriteLine("=== Final Fraud Decision ===\n");
@@ -1261,7 +1014,7 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
                 Provide your final decision with reasoning.
                 """;
 
-            var response = await _agent.RunAsync(prompt, cancellationToken: ct);
+            var response = await _agent.RunAsync(prompt, cancellationToken: cancellationToken);
             var decision = response.Deserialize<FraudDecision>(JsonSerializerOptions.Web);
 
             state.FraudDecision = decision;
@@ -1278,55 +1031,22 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
             Console.WriteLine(new string('─', 80));
             Console.WriteLine();
 
-            // Send decision to next executor
-            await context.SendMessageAsync(decision, cancellationToken: ct);
-            
-            // Forward TurnToken
-            await context.SendMessageAsync(token, cancellationToken: ct);
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingMessage = null;
-            return default;
+            return decision;
         }
     }
 
-    private sealed class OutcomePresenterExecutor : Executor, IResettableExecutor
+    private sealed class OutcomePresenterExecutor :
+        ReflectingExecutor<OutcomePresenterExecutor>,
+        IMessageHandler<FraudDecision, string>
     {
         private readonly AIAgent _agent;
-        private FraudDecision? _pendingDecision;
+        public OutcomePresenterExecutor(AIAgent agent) : base("OutcomePresenter") => _agent = agent;
 
-        public OutcomePresenterExecutor(AIAgent agent) : base("OutcomePresenter", declareCrossRunShareable: true)
+        public async ValueTask<string> HandleAsync(
+            FraudDecision decision,
+            IWorkflowContext context,
+            CancellationToken cancellationToken = default)
         {
-            _agent = agent;
-        }
-
-        protected override RouteBuilder ConfigureRoutes(RouteBuilder routeBuilder)
-        {
-            return routeBuilder
-                .AddHandler<FraudDecision>(HandleDecisionAsync)
-                .AddHandler<TurnToken>(HandleTurnTokenAsync);
-        }
-
-        // Accumulate decision
-        private ValueTask HandleDecisionAsync(FraudDecision decision, IWorkflowContext context, CancellationToken ct)
-        {
-            _pendingDecision = decision;
-            return default;
-        }
-
-        // Process when TurnToken arrives - THIS IS THE FINAL EXECUTOR
-        private async ValueTask HandleTurnTokenAsync(TurnToken token, IWorkflowContext context, CancellationToken ct)
-        {
-            if (_pendingDecision == null)
-            {
-                throw new InvalidOperationException("No decision to present");
-            }
-
-            var decision = _pendingDecision;
-            _pendingDecision = null;
-
             var state = await ReadFraudStateAsync(context);
             
             Console.WriteLine("=== Generating Case Handler Email ===\n");
@@ -1346,42 +1066,15 @@ internal static class Demo12_ClaimsFraudDetection_DevUI
                 """;
 
             var sb = new StringBuilder();
-            
-            // Stream agent output and emit AgentRunUpdateEvents for DevUI
-            await foreach (var up in _agent.RunStreamingAsync(new ChatMessage(ChatRole.User, prompt), cancellationToken: ct))
+            await foreach (var up in _agent.RunStreamingAsync(new ChatMessage(ChatRole.User, prompt), cancellationToken: cancellationToken))
             {
                 if (!string.IsNullOrEmpty(up.Text))
                 {
                     sb.Append(up.Text);
-                    
-                    // ⭐ THIS IS WHAT DEVUI DISPLAYS ⭐
-                    var update = new AgentRunResponseUpdate(ChatRole.Assistant, [new TextContent(up.Text)])
-                    {
-                        CreatedAt = DateTimeOffset.UtcNow,
-                        MessageId = Guid.NewGuid().ToString("N"),
-                        Role = ChatRole.Assistant,
-                        ResponseId = Guid.NewGuid().ToString("N")
-                    };
-                    await context.AddEventAsync(new AgentRunUpdateEvent(this.Id, update), ct);
                 }
             }
 
-            var finalOutput = sb.ToString();
-            var resultMessages = new List<ChatMessage>
-            {
-                new ChatMessage(ChatRole.Assistant, finalOutput)
-            };
-
-            // Mark workflow as complete
-            await context.YieldOutputAsync(resultMessages, ct);
-            
-            // Don't forward TurnToken - this is the final executor
-        }
-
-        public ValueTask ResetAsync()
-        {
-            _pendingDecision = null;
-            return default;
+            return sb.ToString();
         }
     }
 }
